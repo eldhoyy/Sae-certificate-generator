@@ -12,7 +12,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const { data: certificate, error } = await db
     .from("certificates")
-    .select("id, admin_id, certificate_id, participant_snapshot, issue_date, achievement_title, status, event_id")
+    .select("id,admin_id,certificate_id,participant_snapshot,issue_date,achievement_title,status,event_id,template_id")
     .eq("id", id)
     .eq("admin_id", user.id)
     .maybeSingle();
@@ -20,14 +20,35 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (error || !certificate) return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
   if (certificate.status !== "valid") return NextResponse.json({ error: "This certificate has been revoked." }, { status: 410 });
 
-  const { data: event } = await db.from("events").select("name").eq("id", certificate.event_id).eq("admin_id", user.id).maybeSingle();
+  const [{ data: event }, { data: template }] = await Promise.all([
+    db.from("events").select("name").eq("id", certificate.event_id).eq("admin_id", user.id).maybeSingle(),
+    certificate.template_id
+      ? db.from("templates").select("id,background_path,background_mime,layout_json").eq("id", certificate.template_id).eq("admin_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  let backgroundBytes: Uint8Array | null = null;
+  if (template) {
+    const { data: background, error: backgroundError } = await db.storage
+      .from("certificate-templates")
+      .download(template.background_path);
+    if (backgroundError || !background) {
+      return NextResponse.json({ error: "The saved template background is unavailable." }, { status: 500 });
+    }
+    backgroundBytes = new Uint8Array(await background.arrayBuffer());
+  }
+
   const participant = certificate.participant_snapshot as { full_name?: string } | null;
   const bytes = await createSimpleCertificatePdf({
     participantName: participant?.full_name || "Participant",
     eventName: event?.name || "Event",
     certificateId: certificate.certificate_id,
     issueDate: certificate.issue_date,
+    achievementTitle: certificate.achievement_title,
+    template: template ? { background_mime: template.background_mime, layout_json: template.layout_json } : null,
+    backgroundBytes,
   });
+
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       "Content-Type": "application/pdf",
