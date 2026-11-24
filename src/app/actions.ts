@@ -72,3 +72,47 @@ export async function issueOneCertificate(input: {
   if (!row?.id || !row?.certificate_id) throw new Error("Certificate issuance returned no record.");
   return { id: row.id as string, certificateId: row.certificate_id as string, created: Boolean(row.created) };
 }
+
+export async function bulkCreateParticipants(input: {
+  eventId: string;
+  participants: { full_name: string; email?: string | null; external_ref?: string | null }[];
+}) {
+  const { db, user } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.eventId)) throw new Error("Choose a valid event.");
+  if (!Array.isArray(input.participants) || input.participants.length < 1 || input.participants.length > 5000) {
+    throw new Error("Import between 1 and 5,000 participants at a time.");
+  }
+  const cleaned = input.participants.map((item) => ({
+    admin_id: user.id,
+    event_id: input.eventId,
+    full_name: String(item.full_name || "").trim().slice(0, 180),
+    email: item.email ? String(item.email).trim().toLowerCase().slice(0, 254) : null,
+    external_ref: item.external_ref ? String(item.external_ref).trim().slice(0, 180) : null,
+  })).filter((item) => item.full_name.length > 0);
+
+  if (!cleaned.length) throw new Error("No valid participant names were found.");
+  if (cleaned.some((item) => item.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email))) {
+    throw new Error("One or more email addresses are invalid.");
+  }
+
+  const { data: existing, error: lookupError } = await db.from("participants")
+    .select("email").eq("event_id", input.eventId).not("email", "is", null);
+  if (lookupError) throw new Error(lookupError.message);
+  const seen = new Set((existing || []).map((item) => item.email?.toLowerCase()).filter(Boolean) as string[]);
+  const batchSeen = new Set<string>();
+  const unique = cleaned.filter((item) => {
+    if (!item.email) return true;
+    if (seen.has(item.email) || batchSeen.has(item.email)) return false;
+    batchSeen.add(item.email);
+    return true;
+  });
+
+  if (!unique.length) return { inserted: 0, skipped: cleaned.length };
+  for (let start = 0; start < unique.length; start += 250) {
+    const { error } = await db.from("participants").insert(unique.slice(start, start + 250));
+    if (error) throw new Error(error.message);
+  }
+  revalidatePath("/participants");
+  revalidatePath("/certificates");
+  return { inserted: unique.length, skipped: input.participants.length - unique.length };
+}
