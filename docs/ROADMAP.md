@@ -23,7 +23,7 @@
 - [ ] Apply migrations to a real Supabase project and test bootstrap/auth flows.
 - [x] Add PDF background upload and first-page PDF embedding.
 - [x] Snapshot selected template layout and background asset path at issuance.
-- [ ] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
+- [x] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
 - [ ] Add custom font upload/embedding and preview/PDF typography parity.
 - [ ] Add durable asynchronous generation worker with job status, retry and row-level error reporting.
 - [ ] Add server-side file-content validation and stricter upload validation.
@@ -32,4 +32,11 @@
 - [ ] Apply organization settings to certificate branding and output preferences.
 - [ ] Add account invitation delivery and secure admin provisioning workflow.
 - [ ] Review dependency audit findings and update vulnerable packages.
-- [ ] Configure backups, monitoring, error reporting and retention.\n- [x] Increase certificate ID random suffix to 128 bits.\n- [x] Prevent deletion of template assets referenced by saved templates or issued certificates.\n- [x] Audit organisation settings, administrator role changes and certificate revocation reasons.\n
+- [ ] Configure backups, monitoring, error reporting and retention.
+- [x] Increase certificate ID random suffix to 128 bits.
+- [x] Prevent deletion of template assets referenced by saved templates or issued certificates.
+- [x] Audit organisation settings, administrator role changes and certificate revocation reasons.
+
+- [x] Snapshot event name at issuance for stable historical certificate rendering.
+- [x] Validate template field payloads and administrator-owned Storage paths.
+- [x] Open the individual PDF tab synchronously to avoid popup blocking after issuance.

@@ -4,7 +4,7 @@
 - Tenant-owned records include an `admin_id`; relational foreign keys bind child records to the same owner.
 - PostgreSQL Row Level Security is enabled for tenant tables and the organization-settings table.
 - Normal profile updates use a narrowly scoped RPC; Super Admin role changes use a protected database function.
-- Certificate issuance validates the authenticated owner of the event, participant and optional template.
+- Certificate issuance validates the authenticated owner of the event, participant and optional template; immutable issuance snapshots include the event name and template layout.
 - Issuance is idempotent and a database unique index enforces one certificate per participant per event.
 - Certificate IDs are globally unique; revocation preserves the original certificate record and identifier.
 - Template layout version, field configuration and background asset path are snapshotted at issuance.
@@ -12,6 +12,7 @@
 - Template, issued PDF and export storage buckets are private.
 - Folder, event, participant, template, certificate, organisation-setting and administrator role changes are recorded through audit triggers; certificate revocations include their reason.
 - Template source assets cannot be deleted while a saved template or issued certificate snapshot references them.
+- Template layout payloads are schema-validated and bounded to 40 fields; background object paths must be under the authenticated administrator's Storage prefix.
 
 ## Dependency security
 - SheetJS is pinned to the official 0.20.3 distribution because the older npm-registry 0.18.5 release has known spreadsheet-parser vulnerabilities. Re-run `npm audit` and review the full report whenever dependencies change.

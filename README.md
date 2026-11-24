@@ -5,7 +5,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 ## Implemented application workflows
 - Authenticated workspace with dashboard, event folders and event management.
 - Individual participant creation, searchable/paginated records and CSV/XLS/XLSX import with column mapping, preview, validation and email duplicate checks.
-- Visual template designer for PNG/JPG/PDF backgrounds, draggable dynamic fields, QR verification, font family, size, colour and weight.
+- Visual template designer for PNG/JPG/PDF backgrounds, draggable dynamic fields for participant, event, achievement and issue date, QR verification, font family, size, colour and weight.
 - Individual certificate issuance, authenticated PDF download and reasoned revocation.
 - Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
 - Saved PNG/JPG/PDF template rendering in landscape A4 PDF output, including dynamic text and QR fields.
