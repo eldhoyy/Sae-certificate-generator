@@ -1,4 +1,5 @@
 -- Bound public verification lookups and retain the deliberately limited response shape.
+-- Prefer the immutable event name captured at issuance; fall back for legacy rows.
 create or replace function public.public_verify_certificate(lookup_id text)
 returns table(
   certificate_id text,
@@ -22,7 +23,7 @@ begin
   select
     c.certificate_id,
     coalesce(c.participant_snapshot ->> 'full_name', ''),
-    e.name,
+    coalesce(c.participant_snapshot ->> 'event_name', e.name),
     c.issue_date,
     c.achievement_title,
     c.status
