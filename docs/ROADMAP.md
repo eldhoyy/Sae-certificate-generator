@@ -4,8 +4,8 @@
 - [x] Authenticated workspace shell and dashboard
 - [x] Event folders and events
 - [x] Individual participant records with search and pagination
-- [x] CSV/Excel import with column mapping, preview and email duplicate checks
-- [x] PNG/JPG template designer and saved layouts
+- [x] CSV/Excel import with name/email/custom-field mapping, preview and database-enforced email duplicate checks
+- [x] PNG/JPG/PDF template designer with sample preview, draggable/resizable fields and saved layouts
 - [x] Individual certificate issuance, authenticated PDF downloads and reasoned revocation
 - [x] One permanent certificate per participant per event
 - [x] Template-backed PDF output for saved PNG/JPG/PDF templates
@@ -14,7 +14,7 @@
 - [x] Super Admin role management
 - [x] Profile and organisation settings
 - [x] Tenant-aware SQL schema, RLS and private storage policies
-- [x] Selectable standard font families and bold styling
+- [x] Selectable standard font families, bold/italic styling, alignment and field width controls
 - [x] Replace vulnerable npm SheetJS release with official patched distribution
 - [x] Migrate Next.js 16 middleware convention to proxy
 

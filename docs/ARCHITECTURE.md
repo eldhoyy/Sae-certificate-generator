@@ -10,7 +10,7 @@ Use a TypeScript-first Next.js application with Supabase as the managed PostgreS
 2. **Server application:** authenticated server actions/route handlers, schema validation, tenant context, issuance orchestration and audit logging.
 3. **Data:** Supabase PostgreSQL with RLS, foreign keys, unique constraints and transaction-safe database functions where needed.
 4. **Storage:** private Supabase Storage buckets for source templates and issued PDFs; controlled signed downloads.
-5. **Generation:** React Konva layout model; pdf-lib renderer; QR generation; CSV/XLSX parsing; asynchronous bulk job processing.
+5. **Generation:** Versioned DOM-based layout editor with normalized canvas coordinates; pdf-lib renderer; QR generation; CSV/XLSX parsing; bounded synchronous bulk issuance (durable worker remains a production milestone).
 
 ## Tenant isolation
 
@@ -63,7 +63,7 @@ Detailed SQL constraints and RLS policies will be designed before feature implem
 - Next.js App Router + TypeScript
 - Tailwind CSS + shadcn/ui
 - Supabase Auth, PostgreSQL, RLS and Storage
-- React Konva
+- Client-side DOM pointer-based template editor
 - pdf-lib
 - PapaParse + SheetJS
 - qrcode
