@@ -25,7 +25,8 @@
 - [x] Snapshot selected template layout and background asset path at issuance.
 - [x] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
 - [ ] Add custom font upload/embedding and preview/PDF typography parity.
-- [ ] Add durable asynchronous generation worker with job status, retry and row-level error reporting.
+- [x] Add durable asynchronous generation queue, scheduled worker, job status and row-level failure reporting.
+- [ ] Add a retry action for failed queue items and queued-job ZIP packaging.
 - [x] Add server-side PNG/JPEG/PDF signature and size validation before saving or rendering templates.
 - [ ] Add rate limiting and abuse monitoring to public verification.
 - [ ] Add automated integration and end-to-end tests, including two-tenant RLS and Storage isolation.
@@ -33,6 +34,7 @@
 - [x] Add Super Admin-only account invitation delivery and secure admin provisioning workflow.
 - [ ] Review dependency audit findings and update vulnerable packages.
 - [ ] Configure backups, monitoring, error reporting and retention.
+- [ ] Configure CRON_SECRET and confirm Vercel Cron plan/schedule support.
 - [x] Increase certificate ID random suffix to 128 bits.
 - [x] Prevent deletion of template assets referenced by saved templates or issued certificates.
 - [x] Audit organisation settings, administrator role changes and certificate revocation reasons.

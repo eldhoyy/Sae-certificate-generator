@@ -7,7 +7,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 - Individual participant creation, searchable/paginated records and CSV/XLS/XLSX import with name/email mapping, optional custom-field columns, preview, validation and database-enforced case-insensitive email uniqueness per event.
 - Visual template designer for PNG/JPG/PDF backgrounds, draggable/resizable dynamic fields for participant, event, achievement, issue date and imported custom values; sample-value preview, QR verification, font family, size, colour, alignment, bold and italic.
 - Individual certificate issuance, authenticated PDF download and reasoned revocation.
-- Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
+- Individual certificate issuance and durable bulk-generation jobs for up to 5,000 participants per event, with per-row status and background processing.
 - Saved PNG/JPG/PDF template rendering in landscape A4 PDF output, including dynamic text and QR fields.
 - Public certificate verification by certificate ID, with a deliberately limited result and bounded lookup input.
 - Database-enforced tenant ownership, protected Super Admin role changes, profile and organisation settings.
@@ -35,7 +35,7 @@ Run `npm run typecheck`, `npm run lint` and `npm run build`. GitHub Actions runs
 ## Known limitations before production
 - PDF template backgrounds are supported using the first page; browser preview depends on the device's built-in PDF viewer.
 - The editor uses a fixed landscape canvas; stored page-size preferences are not yet applied to rendering.
-- Bulk generation is a bounded synchronous server action and browser ZIP assembly. Large jobs need a durable worker and persisted job progress.
+- Bulk generation is queued in PostgreSQL and processed in small batches by a scheduled Vercel Cron route. Configure CRON_SECRET and SUPABASE_SERVICE_ROLE_KEY, enable Vercel Cron on a plan that supports the five-minute schedule, and monitor job progress. ZIP packaging is not yet part of the queued worker; individual PDFs remain downloadable from the issued-certificate list.
 - Email is the duplicate key for imports; rows without email are accepted and may represent repeated names.
 - Template rendering uses standard PDF fonts; custom font upload/embedding and full typography parity are not implemented.
 - Administrator invitations use Supabase Auth and require the server-only service role key plus configured SMTP delivery.

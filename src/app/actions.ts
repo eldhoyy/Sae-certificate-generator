@@ -130,6 +130,32 @@ export async function bulkCreateParticipants(input: {
   return { inserted: unique.length, skipped: input.participants.length - unique.length };
 }
 
+
+export async function queueCertificateGeneration(input: {
+  eventId: string;
+  participantIds: string[];
+  templateId?: string | null;
+}) {
+  const { db } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.eventId)) throw new Error("Choose a valid event.");
+  if (!Array.isArray(input.participantIds) || input.participantIds.length < 1 || input.participantIds.length > 5000) {
+    throw new Error("Queue between 1 and 5,000 participants per event.");
+  }
+  if (new Set(input.participantIds).size !== input.participantIds.length ||
+      input.participantIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) {
+    throw new Error("The participant selection contains duplicate or invalid IDs.");
+  }
+  if (input.templateId && !/^[0-9a-f-]{36}$/i.test(input.templateId)) throw new Error("Invalid template.");
+  const { data, error } = await db.rpc("enqueue_certificate_generation", {
+    target_event_id: input.eventId,
+    target_template_id: input.templateId ?? null,
+    target_participant_ids: input.participantIds,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/certificates");
+  return { jobId: data as string };
+}
+
 export async function bulkIssueCertificates(input: {
   certificates: { eventId: string; participantId: string }[];
   templateId?: string | null;

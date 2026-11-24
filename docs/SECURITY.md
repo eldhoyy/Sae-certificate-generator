@@ -5,7 +5,8 @@
 - PostgreSQL Row Level Security is enabled for tenant tables and the organization-settings table.
 - Normal profile updates use a narrowly scoped RPC; Super Admin role changes use a protected database function that preserves at least one Super Admin.
 - Administrator invitations are sent only by a server action that verifies the caller's Super Admin role and uses a server-only Supabase service role key.
-- Certificate issuance validates the authenticated owner of the event, participant and optional template; immutable issuance snapshots include the event name and template layout.
+- Certificate issuance validates the authenticated owner of the event, participant and optional template; immutable issuance snapshots include the event name, participant custom fields and template layout.
+- Bulk-generation requests are tenant-validated and persisted as jobs/items; only the server-only service-role worker can process queue items. Admins have read-only access to their own job status.
 - Issuance is idempotent and a database unique index enforces one certificate per participant per event.
 - Certificate IDs are globally unique; revocation preserves the original certificate record and identifier.
 - Template layout version, field configuration and background asset path are snapshotted at issuance.
@@ -32,6 +33,6 @@
 
 ## Important limitations
 - A migration or source-code change does not configure the Supabase project itself. Dashboard settings, secrets, migration execution and live security tests remain operational steps.
-- Bulk generation currently uses bounded synchronous server actions and browser-side ZIP assembly; use a durable worker for large workloads.
+- Bulk generation uses PostgreSQL-backed jobs and a service-role-only worker route. Configure a strong CRON_SECRET, restrict Vercel Cron access, and monitor failed job items. ZIP assembly for queued jobs is not implemented; download issued PDFs individually.
 - The template editor and renderer support PNG/JPG/PDF backgrounds; PDF output embeds the first PDF page. Custom font uploads are not implemented.
 - Historical re-rendering depends on retaining the private source background object in Supabase Storage; the latest migration blocks authenticated deletion while any saved template or issued certificate references it.

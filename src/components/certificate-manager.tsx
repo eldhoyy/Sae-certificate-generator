@@ -1,20 +1,21 @@
 "use client";
 
-import JSZip from "jszip";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Award, AlertCircle, CheckCircle2, Package, Search } from "lucide-react";
-import { bulkIssueCertificates, issueOneCertificate, revokeCertificate } from "@/app/actions";
+import { queueCertificateGeneration, issueOneCertificate, revokeCertificate } from "@/app/actions";
 
 type Participant = { id: string; full_name: string; event_id: string; event_name: string };
 type Certificate = { id: string; certificate_id: string; participant_id: string; event_id: string; status: string; issue_date: string };
 type Template = { id: string; name: string };
+type GenerationJob = { id: string; event_id: string; event_name: string; status: string; total_rows: number; succeeded_rows: number; failed_rows: number; created_at: string; completed_at: string | null };
 
-export function CertificateManager({ participants, certificates, events, templates }: {
+export function CertificateManager({ participants, certificates, events, templates, jobs }: {
   participants: Participant[];
   certificates: Certificate[];
   events: { id: string; name: string }[];
   templates: Template[];
+  jobs: GenerationJob[];
 }) {
   const [busy, setBusy] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -65,40 +66,21 @@ export function CertificateManager({ participants, certificates, events, templat
     finally { setRevokeBusy(false); }
   }
 
-  async function bulkIssueAndDownload() {
+  async function queuePendingGeneration() {
     setBulkBusy(true); setError(""); setNotice("");
     try {
-      const zip = new JSZip();
-      let added = 0;
-      let failedDownloads = 0;
-      for (let start = 0; start < pending.length; start += 250) {
-        const batch = pending.slice(start, start + 250);
-        const result = await bulkIssueCertificates({
-          certificates: batch.map((p) => ({ eventId: p.event_id, participantId: p.id })),
-          templateId: templateId || null,
-        });
-        for (const item of result.issued) {
-          try {
-            const response = await fetch(`/api/certificates/${item.id}/pdf`);
-            if (!response.ok) throw new Error("PDF request failed");
-            zip.file(`${item.certificateId}.pdf`, await response.blob());
-            added++;
-          } catch { failedDownloads++; }
+      const groups = new Map<string, string[]>();
+      for (const participant of pending) groups.set(participant.event_id, [...(groups.get(participant.event_id) || []), participant.id]);
+      const queued: string[] = [];
+      for (const [selectedEventId, participantIds] of groups) {
+        for (let start = 0; start < participantIds.length; start += 5000) {
+          const result = await queueCertificateGeneration({ eventId: selectedEventId, participantIds: participantIds.slice(start, start + 5000), templateId: templateId || null });
+          queued.push(result.jobId);
         }
-        if (result.failures.length) failedDownloads += result.failures.length;
       }
-      if (added) {
-        const blob = await zip.generateAsync({ type: "blob" });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = "certificates.zip";
-        anchor.click();
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
-      setNotice(`Generated ${added} PDF files in the ZIP. ${failedDownloads} issuance or download errors.`);
+      setNotice(`Queued ${pending.length} participants in ${queued.length} background job(s).`);
       router.refresh();
-    } catch (e) { setError(e instanceof Error ? e.message : "Bulk generation failed."); }
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not queue generation."); router.refresh(); }
     finally { setBulkBusy(false); }
   }
 
@@ -120,7 +102,7 @@ export function CertificateManager({ participants, certificates, events, templat
           </div>
         </div>
         <label className="mb-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs text-slate-500"><Search size={14}/><input value={search} onChange={(e) => { setSearch(e.target.value); setParticipantPage(0); setCertificatePage(0); }} placeholder="Search participant, event or certificate ID" className="min-w-0 flex-1 outline-none" /></label>
-        {pending.length > 0 && <button disabled={bulkBusy || !!busy} onClick={bulkIssueAndDownload} className="mb-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Package size={14} />{bulkBusy ? "Generating ZIP…" : `Issue ${pending.length} pending & download ZIP`}</button>}
+        {pending.length > 0 && <button disabled={bulkBusy || !!busy} onClick={queuePendingGeneration} className="mb-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Package size={14} />{bulkBusy ? "Queueing…" : `Queue ${pending.length} pending for generation`}</button>}
         {selectedParticipants.length === 0 ? <p className="py-8 text-center text-sm text-slate-400">No participants in this selection yet.</p> : <div className="divide-y">
           {participantRows.map((p) => {
             const existing = certificates.find((c) => c.participant_id === p.id && c.event_id === p.event_id);
@@ -131,6 +113,19 @@ export function CertificateManager({ participants, certificates, events, templat
           })}
         </div>}
         {selectedParticipants.length > pageSize && <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>Page {participantPage + 1} of {participantPageCount} · {selectedParticipants.length} participants</span><div className="flex gap-2"><button disabled={participantPage === 0} onClick={() => setParticipantPage((p) => p - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Previous</button><button disabled={participantPage + 1 >= participantPageCount} onClick={() => setParticipantPage((p) => p + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Next</button></div></div>}
+      </section>
+      <section className="rounded-2xl border bg-white p-5">
+        <div className="mb-3 flex items-center justify-between"><div><h2 className="font-semibold">Background generation jobs</h2><p className="mt-1 text-xs text-slate-500">Queued batches and row-level progress</p></div><button onClick={() => router.refresh()} className="rounded-lg border px-3 py-2 text-xs">Refresh status</button></div>
+        {jobs.length === 0 ? <p className="py-4 text-xs text-slate-400">No background jobs yet.</p> : <div className="divide-y">{jobs.map((job) => {
+          const done = job.succeeded_rows + job.failed_rows;
+          const percent = job.total_rows ? Math.round(done / job.total_rows * 100) : 0;
+          return <div key={job.id} className="py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold">{job.event_name}</p><p className="mt-1 text-[10px] text-slate-400">{new Date(job.created_at).toLocaleString()}</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase">{job.status}</span></div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} /></div>
+            <p className="mt-1 text-[10px] text-slate-500">{job.succeeded_rows} succeeded · {job.failed_rows} failed · {Math.max(0, job.total_rows - done)} pending · {percent}%</p>
+          </div>;
+        })}</div>}
+        <p className="mt-3 text-[10px] leading-4 text-slate-400">The scheduled worker runs every five minutes when Vercel Cron is enabled. Refresh to see progress. Issued PDFs remain downloadable in the list below.</p>
       </section>
       <section className="rounded-2xl border bg-white p-5">
         <div className="mb-4 flex items-center justify-between"><div><h2 className="font-semibold">Issued certificates</h2><p className="mt-1 text-xs text-slate-500">{visible.length} records</p></div><Award size={19} className="text-blue-700" /></div>
