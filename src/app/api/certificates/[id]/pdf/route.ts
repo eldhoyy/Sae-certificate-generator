@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createSimpleCertificatePdf } from "@/lib/pdf";
+import { isValidCertificateBackground } from "@/lib/file-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -42,10 +43,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "The saved template background is unavailable." }, { status: 500 });
     }
     backgroundBytes = new Uint8Array(await background.arrayBuffer());
+    if (backgroundBytes.byteLength > 10 * 1024 * 1024 || !isValidCertificateBackground(backgroundBytes, backgroundMime)) {
+      return NextResponse.json({ error: "The saved template background is not a valid supported file." }, { status: 422 });
+    }
   }
 
   const participant = certificate.participant_snapshot as { full_name?: string; event_name?: string } | null;
-  const bytes = await createSimpleCertificatePdf({
+  let bytes: Uint8Array;
+  try {
+    bytes = await createSimpleCertificatePdf({
     participantName: participant?.full_name || "Participant",
     eventName: participant?.event_name || event?.name || "Event",
     certificateId: certificate.certificate_id,
@@ -53,7 +59,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     achievementTitle: certificate.achievement_title,
     template: backgroundMime ? { background_mime: backgroundMime, layout_json: layout } : null,
     backgroundBytes,
-  });
+    });
+  } catch {
+    return NextResponse.json({ error: "Certificate PDF could not be rendered. Check the saved template file and layout." }, { status: 422 });
+  }
 
   return new NextResponse(Buffer.from(bytes), {
     headers: {

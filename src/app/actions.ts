@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { folderSchema, eventSchema, participantSchema, templateSchema } from "@/lib/validation";
+import { isValidCertificateBackground } from "@/lib/file-validation";
 
 async function currentUser() {
   const db = await createClient();
@@ -38,6 +39,13 @@ export async function saveTemplate(input: unknown) {
   const data = templateSchema.parse(input);
   const { db, user } = await currentUser();
   if (!data.background_path.startsWith(`${user.id}/`)) throw new Error("Template assets must belong to your administrator account.");
+  const { data: asset, error: assetError } = await db.storage.from("certificate-templates").download(data.background_path);
+  if (assetError || !asset) throw new Error("Template background could not be read from private storage.");
+  if (asset.size > 10 * 1024 * 1024) throw new Error("Template background must be 10 MB or smaller.");
+  const assetBytes = new Uint8Array(await asset.arrayBuffer());
+  if (!isValidCertificateBackground(assetBytes, data.background_mime)) {
+    throw new Error("The uploaded file content does not match its declared PNG, JPG or PDF format.");
+  }
   const { error } = await db.from("templates").insert({ ...data, admin_id: user.id });
   if (error) throw new Error(error.message);
   revalidatePath("/templates");
