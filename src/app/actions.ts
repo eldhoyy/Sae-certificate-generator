@@ -116,3 +116,38 @@ export async function bulkCreateParticipants(input: {
   revalidatePath("/certificates");
   return { inserted: unique.length, skipped: input.participants.length - unique.length };
 }
+
+export async function bulkIssueCertificates(input: {
+  certificates: { eventId: string; participantId: string }[];
+  templateId?: string | null;
+}) {
+  const { db } = await currentUser();
+  if (!Array.isArray(input.certificates) || input.certificates.length < 1 || input.certificates.length > 250) {
+    throw new Error("Bulk issuance is limited to 250 participants per batch.");
+  }
+  if (input.templateId && !/^[0-9a-f-]{36}$/i.test(input.templateId)) throw new Error("Invalid template.");
+  const issued: { id: string; certificateId: string; eventId: string; participantId: string }[] = [];
+  const failures: { participantId: string; message: string }[] = [];
+
+  for (const item of input.certificates) {
+    if (!/^[0-9a-f-]{36}$/i.test(item.eventId) || !/^[0-9a-f-]{36}$/i.test(item.participantId)) {
+      failures.push({ participantId: item.participantId, message: "Invalid event or participant ID" });
+      continue;
+    }
+    const { data, error } = await db.rpc("issue_certificate", {
+      target_event_id: item.eventId,
+      target_participant_id: item.participantId,
+      target_template_id: input.templateId ?? null,
+      target_achievement_title: null,
+      request_key: crypto.randomUUID(),
+    });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row?.id || !row?.certificate_id) {
+      failures.push({ participantId: item.participantId, message: error?.message || "Issuance failed" });
+      continue;
+    }
+    issued.push({ id: row.id, certificateId: row.certificate_id, eventId: item.eventId, participantId: item.participantId });
+  }
+  revalidatePath("/certificates");
+  return { issued, failures };
+}
