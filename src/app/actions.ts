@@ -171,3 +171,22 @@ export async function updateMyDisplayName(input: { displayName: string }) {
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }
+
+export async function saveOrganizationSettings(input: {
+  organizationName: string; website: string; contactEmail: string; dateFormat: string; pageSize: string;
+}) {
+  const { db, user } = await currentUser();
+  const organizationName = input.organizationName.trim().slice(0, 160);
+  const website = input.website.trim().slice(0, 300);
+  const contactEmail = input.contactEmail.trim().slice(0, 254);
+  if (website && !/^https?:\/\//i.test(website)) throw new Error("Website must start with https:// or http://.");
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) throw new Error("Enter a valid contact email.");
+  if (!["DD MMM YYYY","DD/MM/YYYY","YYYY-MM-DD"].includes(input.dateFormat)) throw new Error("Invalid date format.");
+  if (!["A4 Landscape","A4 Portrait"].includes(input.pageSize)) throw new Error("Invalid page size.");
+  const { error } = await db.from("organization_settings").upsert({
+    admin_id: user.id, organization_name: organizationName, website, contact_email: contactEmail,
+    date_format: input.dateFormat, page_size: input.pageSize, updated_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}

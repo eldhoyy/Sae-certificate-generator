@@ -1,3 +1,24 @@
-"use client";import {useState} from "react";import {Heading,Card,Button,Input} from "@/components/ui";import {Building2,UserRound,Shield,SlidersHorizontal} from "lucide-react";
-const tabs=[["organisation","Organisation",Building2],["profile","Profile",UserRound],["security","Security",Shield],["preferences","Preferences",SlidersHorizontal]] as const;
-export default function Page(){const [tab,setTab]=useState("organisation");return <><Heading eyebrow="Workspace configuration" title="Settings" desc="Manage organisation details, your profile and workspace preferences."/><div className="grid gap-5 lg:grid-cols-[220px_1fr]"><Card className="h-fit p-2">{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id)} className={"flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold "+(tab===id?"bg-blue-50 text-blue-700":"text-slate-500")}><Icon size={15}/>{label}</button>)}</Card><Card><h2 className="text-sm font-bold">{tabs.find(x=>x[0]===tab)?.[1]} settings</h2><p className="mb-5 mt-1 text-xs text-slate-400">Changes will be saved after the Supabase settings integration is enabled.</p>{tab==="organisation"&&<div className="grid max-w-xl gap-4"><Input label="Organisation name" placeholder="Institution or organisation"/><Input label="Public website" placeholder="https://example.org"/><Input label="Contact email" placeholder="certificates@example.org"/><Input label="Certificate ID prefix" placeholder="CERT"/><Button disabled>Save settings</Button></div>}{tab==="profile"&&<div className="grid max-w-xl gap-4"><Input label="Display name" placeholder="Your name"/><Input label="Email address" placeholder="admin@example.org"/><Button disabled>Save profile</Button></div>}{tab==="security"&&<div className="rounded-xl bg-slate-50 p-4 text-xs leading-6 text-slate-600">Authentication provider: Supabase Auth. Tenant isolation: PostgreSQL Row Level Security policies are defined in the migrations and must be applied and tested.</div>}{tab==="preferences"&&<div className="grid max-w-xl gap-4"><label className="text-xs">Default certificate page size<select className="mt-2 block w-full rounded-xl border p-3"><option>A4 Landscape</option><option>A4 Portrait</option></select></label><label className="text-xs">Default date format<select className="mt-2 block w-full rounded-xl border p-3"><option>DD MMM YYYY</option><option>DD/MM/YYYY</option></select></label></div>}</Card></div></>}
+import { createClient } from "@/lib/supabase/server";
+import { SettingsManager } from "@/components/settings-manager";
+
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const db = await createClient();
+  const [{ data: { user } }, { data: profile }, { data: settings }] = await Promise.all([
+    db.auth.getUser(),
+    db.from("profiles").select("display_name").maybeSingle(),
+    db.from("organization_settings").select("organization_name,website,contact_email,date_format,page_size").maybeSingle(),
+  ]);
+  return <SettingsManager
+    displayName={profile?.display_name || ""}
+    email={user?.email || ""}
+    settings={{
+      organization_name: settings?.organization_name || "",
+      website: settings?.website || "",
+      contact_email: settings?.contact_email || "",
+      date_format: settings?.date_format || "DD MMM YYYY",
+      page_size: settings?.page_size || "A4 Landscape",
+    }}
+  />;
+}
