@@ -85,7 +85,7 @@ begin
   if not found then raise exception 'Template not found'; end if;
   frozen_layout:=jsonb_build_object('template_version',selected_template_version,'layout_json',selected_layout,'background_path',selected_background_path,'background_mime',selected_background_mime);
  else frozen_layout:=null; end if;
- new_id:='CERT-'||to_char(current_date,'YYYYMMDD')||'-'||upper(replace(gen_random_uuid()::text,'-',''));
+ new_id:='CERT-'||to_char(current_date,'YYYYMMDD')||'-'||upper(encode(public.gen_random_bytes(16),'hex'));
  insert into public.certificates(admin_id,event_id,participant_id,template_id,certificate_id,achievement_title,participant_snapshot,idempotency_key,template_version,layout_snapshot)
  values(caller,target_event_id,target_participant_id,target_template_id,new_id,nullif(trim(target_achievement_title),''),participant_data,trim(request_key),selected_template_version,frozen_layout)
  on conflict do nothing returning * into inserted;
