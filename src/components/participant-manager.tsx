@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { createParticipant, bulkCreateParticipants } from "@/app/actions";
 import { readParticipantFile, type ImportRow } from "@/lib/imports";
 
@@ -22,7 +23,14 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   const [nameField, setNameField] = useState("");
   const [emailField, setEmailField] = useState("");
   const [importMessage, setImportMessage] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const router = useRouter();
+
+  const pageSize = 20;
+  const filteredParticipants = useMemo(() => participants.filter((p) => !search.trim() || `${p.full_name} ${p.email || ""} ${events.find((event) => event.id === p.event_id)?.name || ""}`.toLowerCase().includes(search.trim().toLowerCase())), [participants, events, search]);
+  const pageCount = Math.max(1, Math.ceil(filteredParticipants.length / pageSize));
+  const visibleParticipants = filteredParticipants.slice(page * pageSize, (page + 1) * pageSize);
 
   const prepared = useMemo(() => rows.map((row) => ({
     full_name: String(row[nameField] ?? "").trim(),
@@ -94,7 +102,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   return (
     <section className="rounded-2xl border bg-white p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-semibold">Participants</h2><p className="mt-1 text-xs text-slate-500">{participants.length} records</p></div>
+        <div><h2 className="font-semibold">Participants</h2><p className="mt-1 text-xs text-slate-500">{filteredParticipants.length} matching records · latest 500 loaded</p></div>
         <div className="flex gap-2">
           <label className="cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-semibold">Import CSV / Excel
             <input type="file" accept=".csv,.xlsx,.xls" className="hidden" disabled={!events.length || busy} onChange={(e) => chooseFile(e.target.files?.[0])} />
@@ -103,6 +111,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
         </div>
       </div>
 
+      <label className="mb-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs text-slate-500"><Search size={14}/><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} placeholder="Search participant, email or event" className="min-w-0 flex-1 outline-none"/></label>
       {!events.length && <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Create an event before adding participants.</p>}
       {open && <form onSubmit={submit} className="mb-5 grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
         <input required maxLength={180} value={name} onChange={(e) => setName(e.target.value)} placeholder="Participant full name" className="rounded-lg border p-3 text-sm" />
@@ -127,7 +136,8 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
 
       {error && !open && !importOpen && <p role="alert" className="mb-3 text-xs text-rose-600">{error}</p>}
       {importMessage && <p role="status" className="mb-3 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700">{importMessage}</p>}
-      {participants.length === 0 ? <p className="py-10 text-center text-sm text-slate-400">No participants added yet.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2">Name</th><th>Email</th><th>Event</th><th>Added</th></tr></thead><tbody className="divide-y">{participants.map((p) => <tr key={p.id}><td className="py-3 font-semibold">{p.full_name}</td><td>{p.email || "—"}</td><td>{events.find((e) => e.id === p.event_id)?.name || "—"}</td><td>{new Date(p.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>}
+      {filteredParticipants.length === 0 ? <p className="py-10 text-center text-sm text-slate-400">No matching participants found.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2">Name</th><th>Email</th><th>Event</th><th>Added</th></tr></thead><tbody className="divide-y">{visibleParticipants.map((p) => <tr key={p.id}><td className="py-3 font-semibold">{p.full_name}</td><td>{p.email || "—"}</td><td>{events.find((e) => e.id === p.event_id)?.name || "—"}</td><td>{new Date(p.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>}
+      {filteredParticipants.length > pageSize && <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>Page {page + 1} of {pageCount}</span><div className="flex gap-2"><button disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Previous</button><button disabled={page + 1 >= pageCount} onClick={() => setPage((value) => value + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Next</button></div></div>}
     </section>
   );
 }
