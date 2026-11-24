@@ -156,6 +156,16 @@ export async function queueCertificateGeneration(input: {
   return { jobId: data as string };
 }
 
+
+export async function retryGenerationJob(input: { jobId: string }) {
+  const { db } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.jobId)) throw new Error("Invalid generation job.");
+  const { data, error } = await db.rpc("retry_generation_job", { target_job_id: input.jobId });
+  if (error) throw new Error(error.message);
+  revalidatePath("/certificates");
+  return { retried: Number(data || 0) };
+}
+
 export async function bulkIssueCertificates(input: {
   certificates: { eventId: string; participantId: string }[];
   templateId?: string | null;

@@ -3,19 +3,21 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Award, AlertCircle, CheckCircle2, Package, Search } from "lucide-react";
-import { queueCertificateGeneration, issueOneCertificate, revokeCertificate } from "@/app/actions";
+import { queueCertificateGeneration, issueOneCertificate, revokeCertificate, retryGenerationJob } from "@/app/actions";
 
 type Participant = { id: string; full_name: string; event_id: string; event_name: string };
 type Certificate = { id: string; certificate_id: string; participant_id: string; event_id: string; status: string; issue_date: string };
 type Template = { id: string; name: string };
 type GenerationJob = { id: string; event_id: string; event_name: string; status: string; total_rows: number; succeeded_rows: number; failed_rows: number; created_at: string; completed_at: string | null };
+type GenerationJobItem = { id: string; job_id: string; participant_id: string; status: string; error_message: string | null };
 
-export function CertificateManager({ participants, certificates, events, templates, jobs }: {
+export function CertificateManager({ participants, certificates, events, templates, jobs, jobItems }: {
   participants: Participant[];
   certificates: Certificate[];
   events: { id: string; name: string }[];
   templates: Template[];
   jobs: GenerationJob[];
+  jobItems: GenerationJobItem[];
 }) {
   const [busy, setBusy] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -29,6 +31,7 @@ export function CertificateManager({ participants, certificates, events, templat
   const [revokeTarget, setRevokeTarget] = useState<Certificate | null>(null);
   const [revokeReason, setRevokeReason] = useState("");
   const [revokeBusy, setRevokeBusy] = useState(false);
+  const [retryBusy, setRetryBusy] = useState("");
   const router = useRouter();
 
   const pageSize = 20;
@@ -53,6 +56,16 @@ export function CertificateManager({ participants, certificates, events, templat
       router.refresh();
     } catch (e) { downloadWindow?.close(); setError(e instanceof Error ? e.message : "Could not issue certificate."); }
     finally { setBusy(""); }
+  }
+
+  async function retryJob(job: GenerationJob) {
+    setRetryBusy(job.id); setError(""); setNotice("");
+    try {
+      const result = await retryGenerationJob({ jobId: job.id });
+      setNotice(`Re-queued ${result.retried} failed row(s) for ${job.event_name}.`);
+      router.refresh();
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not retry failed rows."); }
+    finally { setRetryBusy(""); }
   }
 
   async function confirmRevoke() {
@@ -123,6 +136,11 @@ export function CertificateManager({ participants, certificates, events, templat
             <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold">{job.event_name}</p><p className="mt-1 text-[10px] text-slate-400">{new Date(job.created_at).toLocaleString()}</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase">{job.status}</span></div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} /></div>
             <p className="mt-1 text-[10px] text-slate-500">{job.succeeded_rows} succeeded · {job.failed_rows} failed · {Math.max(0, job.total_rows - done)} pending · {percent}%</p>
+            {job.failed_rows > 0 && <div className="mt-2 rounded-lg bg-rose-50 p-2">
+              <div className="mb-1 flex items-center justify-between gap-2"><p className="text-[10px] font-semibold text-rose-700">Failed rows</p><button disabled={retryBusy === job.id} onClick={() => retryJob(job)} className="text-[10px] font-semibold text-rose-700 underline">{retryBusy === job.id ? "Retrying…" : "Retry failed rows"}</button></div>
+              {jobItems.filter((item) => item.job_id === job.id).slice(0, 4).map((item) => <p key={item.id} className="mt-1 text-[10px] text-rose-700">{participants.find((participant) => participant.id === item.participant_id)?.full_name || item.participant_id}: {item.error_message || "Generation failed"}</p>)}
+              {job.failed_rows > 4 && <p className="mt-1 text-[10px] text-rose-600">And {job.failed_rows - 4} more failed row(s).</p>}
+            </div>}
           </div>;
         })}</div>}
         <p className="mt-3 text-[10px] leading-4 text-slate-400">The scheduled worker runs every five minutes when Vercel Cron is enabled. Refresh to see progress. Issued PDFs remain downloadable in the list below.</p>

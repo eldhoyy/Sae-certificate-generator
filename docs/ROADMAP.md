@@ -26,7 +26,8 @@
 - [x] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
 - [ ] Add custom font upload/embedding and preview/PDF typography parity.
 - [x] Add durable asynchronous generation queue, scheduled worker, job status and row-level failure reporting.
-- [ ] Add a retry action for failed queue items and queued-job ZIP packaging.
+- [x] Add a retry action for failed queue items and show row-level errors in the workspace.
+- [ ] Add queued-job ZIP packaging.
 - [x] Add server-side PNG/JPEG/PDF signature and size validation before saving or rendering templates.
 - [ ] Add rate limiting and abuse monitoring to public verification.
 - [ ] Add automated integration and end-to-end tests, including two-tenant RLS and Storage isolation.
