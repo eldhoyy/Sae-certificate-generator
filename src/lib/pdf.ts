@@ -84,9 +84,13 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
           page.drawImage(qr, { x, y: 595 - top - 72, width: 72, height: 72 });
           continue;
         }
-        const customMatch = token.match(/^\\{\\{custom:([^}]{1,80})\\}\\}$/);
-        const customValue = customMatch ? d.customFields?.[customMatch[1].trim()] : undefined;
-        const value = customMatch
+        const customKey = token.startsWith("{{custom:") && token.endsWith("}}")
+          ? token.slice(9, -2).trim()
+          : "";
+        const customValue = customKey
+          ? (d.customFields?.[customKey] ?? Object.entries(d.customFields || {}).find(([key]) => key.toLowerCase() === customKey.toLowerCase())?.[1])
+          : undefined;
+        const value = customKey
           ? (customValue === null || customValue === undefined ? "" : String(customValue))
           : values[token] ?? (token.startsWith("{{") ? field.label || "" : token);
         if (!value) continue;
