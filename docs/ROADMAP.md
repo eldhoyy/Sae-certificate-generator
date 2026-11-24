@@ -18,7 +18,7 @@
 
 ## Remaining before production
 - [ ] Apply migrations to a real Supabase project and test bootstrap/auth flows.
-- [ ] Add PDF background import and PDF page embedding.
+- [x] Add PDF background upload and first-page PDF embedding.
 - [x] Snapshot selected template layout and background asset path at issuance.
 - [ ] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
 - [ ] Add custom font upload/embedding and preview/PDF typography parity.

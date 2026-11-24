@@ -5,7 +5,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 ## Implemented application workflows
 - Authenticated workspace with dashboard, event folders and event management.
 - Individual participant creation and CSV/XLS/XLSX import with column mapping, preview and email duplicate checks.
-- Visual template designer for PNG/JPG backgrounds, draggable text fields, dynamic tokens, font size, colour and weight.
+- Visual template designer for PNG/JPG/PDF backgrounds, draggable text fields, dynamic tokens, font size, colour and weight.
 - Individual certificate issuance and PDF download.
 - Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
 - Saved PNG/JPG template rendering in landscape A4 PDF output, including dynamic text and QR fields.
@@ -33,7 +33,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 Run `npm run typecheck`, `npm run lint` and `npm run build`. GitHub Actions runs these checks on pushes to `main` and pull requests. Check the latest workflow status before treating a commit as validated.
 
 ## Known limitations before production
-- PDF template backgrounds are not yet supported; use PNG or JPG.
+- PDF template backgrounds are supported using the first page; browser preview depends on the device's built-in PDF viewer.
 - The editor uses a fixed landscape canvas; stored page-size preferences are not yet applied to rendering.
 - Bulk generation is a bounded synchronous server action and browser ZIP assembly. Large jobs need a durable worker and persisted job progress.
 - Email is the duplicate key for imports; rows without email are accepted and may represent repeated names.

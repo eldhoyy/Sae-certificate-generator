@@ -27,5 +27,5 @@
 ## Important limitations
 - A migration or source-code change does not configure the Supabase project itself. Dashboard settings, secrets, migration execution and live security tests remain operational steps.
 - Bulk generation currently uses bounded synchronous server actions and browser-side ZIP assembly; use a durable worker for large workloads.
-- The template editor and renderer currently support PNG/JPG backgrounds, not PDF backgrounds or custom font uploads.
+- The template editor and renderer support PNG/JPG/PDF backgrounds; PDF output embeds the first PDF page. Custom font uploads are not implemented.
 - Historical re-rendering still depends on retaining the private source background object in Supabase Storage.
