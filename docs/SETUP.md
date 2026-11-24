@@ -7,9 +7,9 @@
 
 ## Local application
 1. Copy `.env.example` to `.env.local`.
-2. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Add `SUPABASE_SERVICE_ROLE_KEY` as a server-only secret to enable Super Admin invitations; never prefix it with `NEXT_PUBLIC_`.
 3. Apply all SQL files in `supabase/migrations` in ascending filename order.
-4. In Supabase Authentication settings, disable public sign-ups. Create administrator accounts only through a trusted operator process.
+4. In Supabase Authentication settings, disable public sign-ups and configure SMTP/email delivery. Super Admins can then invite administrators from the Administrators page using the server-only service role key.
 5. Configure the Supabase Auth site URL and allowed redirect URLs for localhost and your deployed domain.
 6. Set `NEXT_PUBLIC_APP_URL` to the public app origin. This is used to create QR verification links.
 7. Run `npm install`, then `npm run dev`.
@@ -27,6 +27,7 @@ Do not expose this operation through a public API. After bootstrap, Super Admin 
 
 ## Deployment
 - Add the public Supabase URL and anon key to the hosting provider's environment.
+- Add `SUPABASE_SERVICE_ROLE_KEY` as a server-only environment secret to enable invitation delivery. Do not expose it to client bundles.
 - Set `NEXT_PUBLIC_APP_URL` to the deployed HTTPS origin.
 - Configure Auth redirect URLs to include the deployed origin.
 - Deploy the Next.js application.

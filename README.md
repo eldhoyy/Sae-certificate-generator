@@ -1,6 +1,6 @@
 # Certificate Management Platform
 
-A multi-administrator certificate management platform built with Next.js, TypeScript and Supabase. Each administrator has an isolated workspace for event folders, events, participants, templates and issued certificates. A platform Super Admin can manage administrator roles.
+A multi-administrator certificate management platform built with Next.js, TypeScript and Supabase. Each administrator has an isolated workspace for event folders, events, participants, templates and issued certificates. A platform Super Admin can invite administrators and manage administrator roles.
 
 ## Implemented application workflows
 - Authenticated workspace with dashboard, event folders and event management.
@@ -38,7 +38,7 @@ Run `npm run typecheck`, `npm run lint` and `npm run build`. GitHub Actions runs
 - Bulk generation is a bounded synchronous server action and browser ZIP assembly. Large jobs need a durable worker and persisted job progress.
 - Email is the duplicate key for imports; rows without email are accepted and may represent repeated names.
 - Template rendering uses standard PDF fonts; custom font upload/embedding and full typography parity are not implemented.
-- Administrator accounts are provisioned through Supabase Auth; the Super Admin screen manages roles, not invitation delivery.
+- Administrator invitations use Supabase Auth and require the server-only service role key plus configured SMTP delivery.
 - Organization settings are stored per administrator and are not yet printed on certificates.
 - No live Supabase project, production environment variables, deployment, or end-to-end tenant-security test has been configured in this repository session.
 

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { folderSchema, eventSchema, participantSchema, templateSchema } from "@/lib/validation";
 import { isValidCertificateBackground } from "@/lib/file-validation";
+import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 
 async function currentUser() {
   const db = await createClient();
@@ -213,4 +214,42 @@ export async function revokeCertificate(input: { certificateId: string; reason: 
   });
   if (error) throw new Error(error.message);
   revalidatePath("/certificates");
+}
+
+export async function inviteAdministrator(input: { email: string; displayName: string }) {
+  const { db } = await currentUser();
+  const { data: profile, error: profileError } = await db
+    .from("profiles").select("role").maybeSingle();
+  if (profileError || profile?.role !== "super_admin") {
+    throw new Error("Only a Super Admin can invite administrators.");
+  }
+
+  const email = input.email.trim().toLowerCase();
+  const displayName = input.displayName.trim();
+  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    throw new Error("Enter a valid administrator email address.");
+  }
+  if (displayName.length < 1 || displayName.length > 120) {
+    throw new Error("Administrator name must be 1–120 characters.");
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Administrator invitations are not configured. Add the server-only Supabase service role key.");
+  }
+
+  const adminClient = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const redirectTo = `${(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\\/$/, "")}/login`;
+  const { error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: displayName },
+    redirectTo: redirectTo.startsWith("https://") || redirectTo.startsWith("http://")
+      ? redirectTo
+      : undefined,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admins");
+  return { email };
 }
