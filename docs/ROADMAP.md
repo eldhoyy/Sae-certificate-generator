@@ -43,3 +43,6 @@
 - [x] Enforce case-insensitive participant email uniqueness per event in PostgreSQL.
 - [x] Bound participant custom fields and certificate template field schemas.
 - [x] Prevent removal of the final Super Admin and validate direct issuance RPC title input.
+- [x] Add sample-value preview mode in the certificate designer.
+- [x] Bound public certificate verification lookup input at the page and database function.
+- [x] Personalize the workspace header and hide administrator controls from non-Super Admin navigation.

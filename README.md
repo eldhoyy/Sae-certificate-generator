@@ -5,11 +5,11 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 ## Implemented application workflows
 - Authenticated workspace with dashboard, event folders and event management.
 - Individual participant creation, searchable/paginated records and CSV/XLS/XLSX import with column mapping, preview, validation and database-enforced case-insensitive email uniqueness per event.
-- Visual template designer for PNG/JPG/PDF backgrounds, draggable dynamic fields for participant, event, achievement and issue date, QR verification, font family, size, colour and weight.
+- Visual template designer for PNG/JPG/PDF backgrounds, draggable dynamic fields for participant, event, achievement and issue date, sample-value preview, QR verification, font family, size, colour and weight.
 - Individual certificate issuance, authenticated PDF download and reasoned revocation.
 - Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
 - Saved PNG/JPG/PDF template rendering in landscape A4 PDF output, including dynamic text and QR fields.
-- Public certificate verification by certificate ID, with a deliberately limited result.
+- Public certificate verification by certificate ID, with a deliberately limited result and bounded lookup input.
 - Database-enforced tenant ownership, protected Super Admin role changes, profile and organisation settings.
 - Private Supabase Storage buckets with file-signature validation, protected template asset retention and audit log triggers for workspace, organisation, role and revocation changes.
 
