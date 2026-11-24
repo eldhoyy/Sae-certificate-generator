@@ -1,35 +1,48 @@
 # Certificate Management Platform
 
-A multi-admin certificate management platform built with Next.js, TypeScript and Supabase.
+A multi-administrator certificate management platform built with Next.js, TypeScript and Supabase. Each administrator has an isolated workspace for event folders, events, participants, templates and issued certificates. A platform Super Admin can manage administrator roles.
 
-## Current status
-This repository contains the initial application shell, route structure, Supabase integration foundation, tenant-aware SQL schema, private storage buckets, public verification function, and initial security/issuance database functions.
-
-The UI pages are not yet a complete operational product. Folder/event/participant/template screens and the visual designer still need their full persistent workflows. PDF rendering from saved templates, bulk generation, ZIP exports, and end-to-end verification are not complete. Do not use this as a production certificate issuer yet.
+## Implemented application workflows
+- Authenticated workspace with dashboard, event folders and event management.
+- Individual participant creation and CSV/XLS/XLSX import with column mapping, preview and email duplicate checks.
+- Visual template designer for PNG/JPG backgrounds, draggable text fields, dynamic tokens, font size, colour and weight.
+- Individual certificate issuance and PDF download.
+- Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
+- Saved PNG/JPG template rendering in landscape A4 PDF output, including dynamic text and QR fields.
+- Public certificate verification by certificate ID, with a deliberately limited result.
+- Database-enforced tenant ownership, protected Super Admin role changes, profile and organisation settings.
+- Private Supabase Storage buckets and audit log triggers for core workspace records.
 
 ## Stack
-- Next.js App Router and TypeScript
-- Tailwind CSS
-- Supabase Auth, PostgreSQL, RLS and Storage
-- pdf-lib, QRCode, PapaParse, SheetJS and JSZip
+- Next.js App Router, React and TypeScript; Tailwind CSS
+- Supabase Auth, PostgreSQL, Row Level Security and Storage
+- pdf-lib, qrcode, PapaParse, SheetJS and JSZip
 
 ## Local setup
-1. Install Node.js 22 or newer.
+1. Use Node.js 22 or newer.
 2. Copy `.env.example` to `.env.local`.
 3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Install dependencies with `npm install`.
-5. Run database migrations in order in a disposable Supabase project.
-6. Disable public signups in Supabase Auth settings; admin provisioning is intended to be controlled.
-7. Run `npm run dev`.
+4. Create a Supabase project and apply every SQL migration in `supabase/migrations` in filename order.
+5. Disable public sign-ups in Supabase Authentication settings.
+6. Create the first trusted administrator through Supabase Auth. Promote the platform owner using the SQL statement in [docs/SETUP.md](docs/SETUP.md).
+7. Configure Supabase Auth site URL and redirect URLs.
+8. Set `NEXT_PUBLIC_APP_URL` to the public app origin for QR verification links.
+9. Run `npm install` and `npm run dev`.
 
 ## Validation
-```bash
-npm run typecheck
-npm run lint
-npm run build
-```
+Run `npm run typecheck`, `npm run lint` and `npm run build`. GitHub Actions runs these checks on pushes to `main` and pull requests. Check the latest workflow status before treating a commit as validated.
 
-GitHub Actions runs these checks on pushes and pull requests to `main`. A workflow definition is not proof that the checks have passed.
+## Known limitations before production
+- PDF template backgrounds are not yet supported; use PNG or JPG.
+- The editor uses a fixed landscape canvas; stored page-size preferences are not yet applied to rendering.
+- Bulk generation is a bounded synchronous server action and browser ZIP assembly. Large jobs need a durable worker and persisted job progress.
+- Email is the duplicate key for imports; rows without email are accepted and may represent repeated names.
+- Template rendering uses standard PDF fonts; custom font upload/embedding and full typography parity are not implemented.
+- Administrator accounts are provisioned through Supabase Auth; the Super Admin screen manages roles, not invitation delivery.
+- Organization settings are stored per administrator and are not yet printed on certificates.
+- No live Supabase project, production environment variables, deployment, or end-to-end tenant-security test has been configured in this repository session.
+
+Do not issue production certificates until migrations have been applied and the security checklist has been completed.
 
 ## Documentation
 - [Product specification](docs/PRODUCT_SPEC.md)
@@ -37,6 +50,3 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. A workfl
 - [Security checklist](docs/SECURITY.md)
 - [Setup](docs/SETUP.md)
 - [Roadmap](docs/ROADMAP.md)
-
-## Security
-Never commit service-role keys or production credentials. Review [docs/SECURITY.md](docs/SECURITY.md) before connecting a live Supabase project.
