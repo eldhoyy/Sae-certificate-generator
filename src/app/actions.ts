@@ -31,6 +31,7 @@ export async function createParticipant(input: unknown) {
   const data = participantSchema.parse(input);
   const { db, user } = await currentUser();
   const { error } = await db.from("participants").insert({ ...data, admin_id: user.id });
+  if (error?.code === "23505") throw new Error("This email is already registered for the selected event.");
   if (error) throw new Error(error.message);
   revalidatePath("/participants");
 }

@@ -1,7 +1,7 @@
 import {z} from "zod";
 export const folderSchema=z.object({name:z.string().trim().min(1).max(120),description:z.string().trim().max(1000).optional()});
 export const eventSchema=z.object({name:z.string().trim().min(1).max(180),folder_id:z.string().uuid().nullable().optional(),description:z.string().trim().max(2000).optional(),starts_at:z.string().datetime().nullable().optional(),ends_at:z.string().datetime().nullable().optional()});
-export const participantSchema=z.object({event_id:z.string().uuid(),full_name:z.string().trim().min(1).max(180),email:z.union([z.string().email(),z.literal("")]).optional(),external_ref:z.string().trim().max(180).optional(),custom_fields:z.record(z.string(),z.unknown()).optional()});
+export const participantSchema=z.object({event_id:z.string().uuid(),full_name:z.string().trim().min(1).max(180),email:z.union([z.string().email(),z.literal("")]).optional(),external_ref:z.string().trim().max(180).optional(),custom_fields:z.record(z.string().max(80),z.union([z.string().max(500),z.number().finite(),z.boolean(),z.null()])).refine((value)=>Object.keys(value).length<=40,"At most 40 custom fields are allowed").optional()});
 const templateFieldSchema = z.object({
   id: z.number().int().positive(), label: z.string().trim().min(1).max(80),
   token: z.string().trim().min(1).max(120), x: z.number().min(0).max(100),
