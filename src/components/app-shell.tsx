@@ -8,6 +8,7 @@ import {
   Award, ScanSearch, ShieldCheck, Settings, Menu, LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { brand } from "@/lib/brand";
 
 const nav = [
   ["Overview", "/workspace", LayoutDashboard],
@@ -22,6 +23,18 @@ const nav = [
 ] as const;
 
 type AppRole = "admin" | "super_admin";
+
+function BrandMark() {
+  return (
+    <span
+      aria-label={brand.chapterName}
+      className="grid size-10 shrink-0 place-items-center rounded-xl text-sm font-extrabold tracking-tight text-white shadow-sm"
+      style={{ backgroundColor: brand.colors.primary }}
+    >
+      {brand.shortName}
+    </span>
+  );
+}
 
 export function AppShell({
   children, displayName, email, role,
@@ -44,15 +57,18 @@ export function AppShell({
 
   const side = (
     <>
-      <div className="flex h-[76px] items-center gap-3 border-b border-slate-100 px-6">
-        <span className="grid size-9 place-items-center rounded-xl bg-blue-700 text-lg font-bold text-white">C</span>
-        <div><b className="text-[17px] tracking-tight">Certify</b><p className="text-[10px] uppercase tracking-[.16em] text-slate-400">Certificate studio</p></div>
+      <div className="flex min-h-[76px] items-center gap-3 border-b border-slate-100 px-5">
+        <BrandMark />
+        <div className="min-w-0">
+          <b className="block truncate text-sm tracking-tight">{brand.chapterName}</b>
+          <p className="text-[10px] uppercase tracking-[.13em] text-slate-400">Certificate system</p>
+        </div>
       </div>
       <nav className="flex-1 space-y-1 px-4 py-6">
         {visibleNav.map(([label, href, Icon]) => (
           <div key={href}>
             {href === "/admins" && <p className="px-3 pb-2 pt-6 text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Administration</p>}
-            <Link onClick={() => setOpen(false)} href={href} className={"flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium " + (path === href ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50")}>
+            <Link onClick={() => setOpen(false)} href={href} className={"flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors duration-200 " + (path === href ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50")}>
               <Icon size={17} />{label}
             </Link>
           </div>
@@ -61,7 +77,7 @@ export function AppShell({
       <div className="p-4">
         <div className="rounded-2xl bg-slate-50 p-4">
           <p className="text-xs font-semibold">Workspace setup</p>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">Connect your organisation and configure your certificate workflow.</p>
+          <p className="mt-1 text-[11px] leading-5 text-slate-500">Configure your chapter and certificate workflow.</p>
           <Link href="/settings" className="mt-2 inline-block text-xs font-semibold text-blue-700">Configure workspace →</Link>
         </div>
       </div>
@@ -75,16 +91,22 @@ export function AppShell({
       <div className="lg:pl-[248px]">
         <header className="sticky top-0 z-20 flex h-[76px] items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur sm:px-8">
           <div className="flex items-center gap-3">
-            <button onClick={() => setOpen(true)} className="rounded-lg p-2 lg:hidden" aria-label="Open navigation"><Menu size={20} /></button>
+            <button onClick={() => setOpen(true)} className="rounded-lg p-2 transition-colors hover:bg-slate-50 lg:hidden" aria-label="Open navigation"><Menu size={20} /></button>
             <p className="text-xs text-slate-400">Workspace / <b className="text-slate-700">{nav.find((item) => item[1] === path)?.[0] || "Overview"}</b></p>
           </div>
           <div className="flex items-center gap-3">
             <span title={email} className="grid size-9 place-items-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{initials}</span>
             <span className="hidden text-right sm:block"><b className="block text-xs font-semibold">{displayName}</b><small className="text-[10px] text-slate-400">{role === "super_admin" ? "Super Admin" : "Administrator"}</small></span>
-            <button onClick={logout} title="Sign out" aria-label="Sign out" className="rounded-lg p-2 text-slate-400 hover:bg-slate-50"><LogOut size={16} /></button>
+            <button onClick={logout} title="Sign out" aria-label="Sign out" className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50"><LogOut size={16} /></button>
           </div>
         </header>
-        <main className="mx-auto max-w-[1500px] p-5 sm:p-8">{children}</main>
+        <main className="mx-auto min-h-[calc(100vh-76px-68px)] max-w-[1500px] p-5 sm:p-8">{children}</main>
+        <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-slate-200 bg-white px-5 py-5 text-[10px] text-slate-400 sm:justify-between sm:px-8">
+          <span>{brand.footerText}</span>
+          <span className="flex items-center gap-1.5" aria-label="Chapter brand colours">
+            {brand.colors.accent.map((color, index) => <i key={index} className="size-1.5 rounded-full" style={{ backgroundColor: color }} />)}
+          </span>
+        </footer>
       </div>
     </div>
   );
