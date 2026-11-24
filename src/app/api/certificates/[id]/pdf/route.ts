@@ -4,18 +4,21 @@ import { createSimpleCertificatePdf } from "@/lib/pdf";
 
 export const dynamic = "force-dynamic";
 
+type FrozenLayout = {
+  layout_json?: { fields?: { token?: string; label?: string; x?: number; y?: number; size?: number; color?: string; bold?: boolean }[] };
+  background_path?: string;
+  background_mime?: string;
+};
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const db = await createClient();
   const { data: { user }, error: authError } = await db.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
-  const { data: certificate, error } = await db
-    .from("certificates")
-    .select("id,admin_id,certificate_id,participant_snapshot,issue_date,achievement_title,status,event_id,template_id")
-    .eq("id", id)
-    .eq("admin_id", user.id)
-    .maybeSingle();
+  const { data: certificate, error } = await db.from("certificates")
+    .select("id,admin_id,certificate_id,participant_snapshot,issue_date,achievement_title,status,event_id,template_id,layout_snapshot")
+    .eq("id", id).eq("admin_id", user.id).maybeSingle();
 
   if (error || !certificate) return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
   if (certificate.status !== "valid") return NextResponse.json({ error: "This certificate has been revoked." }, { status: 410 });
@@ -27,11 +30,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       : Promise.resolve({ data: null }),
   ]);
 
+  const frozen = certificate.layout_snapshot as FrozenLayout | null;
+  const backgroundPath = frozen?.background_path || template?.background_path;
+  const backgroundMime = frozen?.background_mime || template?.background_mime;
+  const layout = frozen?.layout_json || template?.layout_json || { fields: [] };
   let backgroundBytes: Uint8Array | null = null;
-  if (template) {
-    const { data: background, error: backgroundError } = await db.storage
-      .from("certificate-templates")
-      .download(template.background_path);
+
+  if (backgroundPath && backgroundMime) {
+    const { data: background, error: backgroundError } = await db.storage.from("certificate-templates").download(backgroundPath);
     if (backgroundError || !background) {
       return NextResponse.json({ error: "The saved template background is unavailable." }, { status: 500 });
     }
@@ -45,7 +51,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     certificateId: certificate.certificate_id,
     issueDate: certificate.issue_date,
     achievementTitle: certificate.achievement_title,
-    template: template ? { background_mime: template.background_mime, layout_json: template.layout_json } : null,
+    template: backgroundMime ? { background_mime: backgroundMime, layout_json: layout } : null,
     backgroundBytes,
   });
 
