@@ -87,7 +87,7 @@ export async function issueOneCertificate(input: {
 
 export async function bulkCreateParticipants(input: {
   eventId: string;
-  participants: { full_name: string; email?: string | null; external_ref?: string | null }[];
+  participants: { full_name: string; email?: string | null; external_ref?: string | null; custom_fields?: Record<string, string | null> }[];
 }) {
   const { db, user } = await currentUser();
   if (!/^[0-9a-f-]{36}$/i.test(input.eventId)) throw new Error("Choose a valid event.");
@@ -100,6 +100,7 @@ export async function bulkCreateParticipants(input: {
     full_name: String(item.full_name || "").trim().slice(0, 180),
     email: item.email ? String(item.email).trim().toLowerCase().slice(0, 254) : null,
     external_ref: item.external_ref ? String(item.external_ref).trim().slice(0, 180) : null,
+    custom_fields: Object.fromEntries(Object.entries(item.custom_fields || {}).slice(0, 40).map(([key, value]) => [String(key).trim().slice(0, 80), String(value ?? "").trim().slice(0, 500)])),
   })).filter((item) => item.full_name.length > 0);
 
   if (!cleaned.length) throw new Error("No valid participant names were found.");

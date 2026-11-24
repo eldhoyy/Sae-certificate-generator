@@ -22,6 +22,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [nameField, setNameField] = useState("");
   const [emailField, setEmailField] = useState("");
+  const [customFieldHeaders, setCustomFieldHeaders] = useState<string[]>([]);
   const [importMessage, setImportMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -35,6 +36,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   const prepared = useMemo(() => rows.map((row) => ({
     full_name: String(row[nameField] ?? "").trim(),
     email: emailField ? String(row[emailField] ?? "").trim() : "",
+    custom_fields: Object.fromEntries(customFieldHeaders.map((header) => [header, String(row[header] ?? "").trim()]).filter(([, value]) => value)),
   })).filter((row) => row.full_name), [rows, nameField, emailField]);
 
   const existingEmails = useMemo(() => new Set(participants.filter((p) => p.event_id === event && p.email).map((p) => p.email!.toLowerCase())), [participants, event]);
@@ -76,7 +78,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
       const parsed = await readParticipantFile(file);
       if (parsed.rows.length > 5000) throw new Error("Import is limited to 5,000 rows per file.");
       if (!parsed.headers.length || !parsed.rows.length) throw new Error("The file has no participant rows.");
-      setFileName(file.name); setHeaders(parsed.headers); setRows(parsed.rows);
+      setFileName(file.name); setHeaders(parsed.headers); setRows(parsed.rows); setCustomFieldHeaders([]);
       const nameHeader = parsed.headers.find((h) => /name|participant|student/i.test(h)) || parsed.headers[0];
       const emailHeader = parsed.headers.find((h) => /email|e-mail/i.test(h)) || "";
       setNameField(nameHeader); setEmailField(emailHeader); setImportOpen(true);
@@ -88,7 +90,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   async function runImport() {
     setBusy(true); setError(""); setImportMessage("");
     try {
-      const payload = readyRows.map((row) => ({ full_name: row.full_name, email: row.email || null }));
+      const payload = readyRows.map((row) => ({ full_name: row.full_name, email: row.email || null, custom_fields: row.custom_fields }));
       if (!event) throw new Error("Choose an event first.");
       if (!payload.length) throw new Error("No valid, non-duplicate rows are ready to import.");
       const result = await bulkCreateParticipants({ eventId: event, participants: payload });
@@ -123,13 +125,14 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
 
       {importOpen && <div className="mb-5 space-y-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
         <div><h3 className="text-sm font-bold">Import preview</h3><p className="mt-1 text-xs text-slate-500">{fileName} · {rows.length} source rows · {prepared.length} rows with a name</p></div>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-4">
           <label className="text-xs">Target event<select value={event} onChange={(e) => setEvent(e.target.value)} className="mt-1 w-full rounded-lg border bg-white p-2">{events.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label>
           <label className="text-xs">Name column<select value={nameField} onChange={(e) => setNameField(e.target.value)} className="mt-1 w-full rounded-lg border bg-white p-2">{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></label>
           <label className="text-xs">Email column<select value={emailField} onChange={(e) => setEmailField(e.target.value)} className="mt-1 w-full rounded-lg border bg-white p-2"><option value="">No email column</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></label>
+          <label className="text-xs">Custom fields (optional)<select multiple value={customFieldHeaders} onChange={(e) => setCustomFieldHeaders(Array.from(e.target.selectedOptions, (option) => option.value).filter((value) => value !== nameField && value !== emailField).slice(0, 40))} className="mt-1 h-20 w-full rounded-lg border bg-white p-2">{headers.filter((h) => h !== nameField && h !== emailField).map((h) => <option key={h} value={h}>{h}</option>)}</select><span className="mt-1 block text-[10px] text-slate-400">Select extra columns to store for certificate fields.</span></label>
         </div>
         <div className="overflow-x-auto rounded-lg border bg-white"><table className="w-full text-left text-xs"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-2">#</th><th className="p-2">Participant</th><th className="p-2">Email</th><th className="p-2">Review</th></tr></thead><tbody className="divide-y">{prepared.slice(0, 12).map((row, i) => <tr key={i}><td className="p-2">{i + 1}</td><td className="p-2">{row.full_name}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email) ? <span className="text-rose-600">Invalid email</span> : row.email && existingEmails.has(row.email.toLowerCase()) ? <span className="text-rose-600">Already in event</span> : row.email && duplicateEmails.has(row.email.toLowerCase()) ? <span className="text-rose-600">Duplicate in file</span> : <span className="text-emerald-700">Ready</span>}</td></tr>)}</tbody></table></div>
-        <p className="text-[11px] text-slate-500">Ready to import: {readyRows.length} · Invalid email rows: {invalidEmailRows}. Preview shows the first 12 valid-name rows. Existing emails, repeated emails in the file and malformed email addresses are excluded. Names without email are allowed.</p>
+        <p className="text-[11px] text-slate-500">Ready to import: {readyRows.length} · Invalid email rows: {invalidEmailRows} · Custom columns: {customFieldHeaders.length}. Preview shows the first 12 valid-name rows. Existing emails, repeated emails in the file and malformed email addresses are excluded. Names without email are allowed.</p>
         {error && <p className="text-xs text-rose-600">{error}</p>}
         <div className="flex flex-wrap gap-2"><button disabled={busy || !readyRows.length} onClick={runImport} className="rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{busy ? "Importing…" : `Import ${readyRows.length} rows`}</button><button onClick={() => setImportOpen(false)} className="rounded-lg border bg-white px-4 py-2.5 text-xs">Cancel</button></div>
       </div>}
