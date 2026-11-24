@@ -14,19 +14,18 @@
 - Folder, event, participant, template, certificate, organisation-setting and administrator role changes are recorded through audit triggers; certificate revocations include their reason.
 - Template source assets cannot be deleted while a saved template or issued certificate snapshot references them.
 - Template layout payloads are schema-validated and bounded to 40 fields; background object paths must be under the authenticated administrator's Storage prefix.
-- Template layout payloads are schema-validated and bounded to 40 fields; background object paths must be under the authenticated administrator's Storage prefix.
 
 ## Dependency security
 - SheetJS is pinned to the official 0.20.3 distribution because the older npm-registry 0.18.5 release has known spreadsheet-parser vulnerabilities. Re-run `npm audit` and review the full report whenever dependencies change.
 
 ## Required before production
-1. Disable public sign-ups in Supabase Authentication settings. Provision accounts only through a trusted operator process.
+1. Disable public sign-ups and configure SMTP in Supabase Authentication settings. Use the Super Admin invitation workflow for administrator onboarding.
 2. Create the first Super Admin using the controlled SQL bootstrap in `docs/SETUP.md`; never expose role assignment publicly.
 3. Test RLS with at least two normal admin users and one Super Admin, including cross-tenant reads, inserts, updates, deletes and storage paths.
 4. Review every SECURITY DEFINER function, grants and search_path. Run migrations against a disposable Supabase project first.
 5. Add rate limiting and abuse monitoring to public verification.
 6. Add signed-download endpoints or authenticated streaming for private PDFs and exports; never make storage buckets public.
-7. Validate file contents, not only extension/MIME claims. Enforce upload and import limits.
+7. Validate spreadsheet uploads and enforce parser resource limits; template PNG/JPEG/PDF signatures and size are checked server-side.
 8. Add integration and end-to-end tests for auth, tenant isolation, issuance idempotency, revocation, imports and PDF output.
 9. Configure production secrets only in the hosting provider. Never commit service-role keys.
 10. Configure backups, retention, error reporting and audit-log retention.
