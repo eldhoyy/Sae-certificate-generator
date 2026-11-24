@@ -26,7 +26,7 @@
 - [x] Add immutable asset retention controls so template source files cannot be removed while referenced by issued certificates.
 - [ ] Add custom font upload/embedding and preview/PDF typography parity.
 - [ ] Add durable asynchronous generation worker with job status, retry and row-level error reporting.
-- [ ] Add server-side file-content validation and stricter upload validation.
+- [x] Add server-side PNG/JPEG/PDF signature and size validation before saving or rendering templates.
 - [ ] Add rate limiting and abuse monitoring to public verification.
 - [ ] Add automated integration and end-to-end tests, including two-tenant RLS and Storage isolation.
 - [ ] Apply organization settings to certificate branding and output preferences.
@@ -40,3 +40,5 @@
 - [x] Snapshot event name at issuance for stable historical certificate rendering.
 - [x] Validate template field payloads and administrator-owned Storage paths.
 - [x] Open the individual PDF tab synchronously to avoid popup blocking after issuance.
+- [x] Enforce case-insensitive participant email uniqueness per event in PostgreSQL.
+- [x] Bound participant custom fields and certificate template field schemas.
