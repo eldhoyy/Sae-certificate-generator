@@ -29,6 +29,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
     email: emailField ? String(row[emailField] ?? "").trim() : "",
   })).filter((row) => row.full_name), [rows, nameField, emailField]);
 
+  const existingEmails = useMemo(() => new Set(participants.filter((p) => p.event_id === event && p.email).map((p) => p.email!.toLowerCase())), [participants, event]);
   const duplicateEmails = useMemo(() => {
     const seen = new Set<string>();
     const duplicates = new Set<string>();
@@ -40,6 +41,12 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
     }
     return duplicates;
   }, [prepared]);
+  const invalidEmailRows = useMemo(() => prepared.filter((row) => row.email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(row.email)).length, [prepared]);
+  const readyRows = useMemo(() => prepared.filter((row) => {
+    const key = row.email.toLowerCase();
+    return (!key || (!duplicateEmails.has(key) && !existingEmails.has(key))) &&
+      (!key || /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(row.email));
+  }), [prepared, duplicateEmails, existingEmails]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +83,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
       if (!event) throw new Error("Choose an event first.");
       if (!payload.length) throw new Error("No valid, non-duplicate rows are ready to import.");
       const result = await bulkCreateParticipants({ eventId: event, participants: payload });
-      setImportMessage(`Imported ${result.inserted} participants. Skipped ${result.skipped} duplicate or invalid rows.`);
+      setImportMessage(`Imported ${result.inserted} participants. Skipped ${prepared.length - payload.length + result.skipped} duplicate or invalid rows.`);
       setImportOpen(false); setRows([]); setFileName(""); router.refresh();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Import failed.");
@@ -111,10 +118,10 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
           <label className="text-xs">Name column<select value={nameField} onChange={(e) => setNameField(e.target.value)} className="mt-1 w-full rounded-lg border bg-white p-2">{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></label>
           <label className="text-xs">Email column<select value={emailField} onChange={(e) => setEmailField(e.target.value)} className="mt-1 w-full rounded-lg border bg-white p-2"><option value="">No email column</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></label>
         </div>
-        <div className="overflow-x-auto rounded-lg border bg-white"><table className="w-full text-left text-xs"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-2">#</th><th className="p-2">Participant</th><th className="p-2">Email</th><th className="p-2">Review</th></tr></thead><tbody className="divide-y">{prepared.slice(0, 12).map((row, i) => <tr key={i}><td className="p-2">{i + 1}</td><td className="p-2">{row.full_name}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.email && duplicateEmails.has(row.email.toLowerCase()) ? <span className="text-rose-600">Duplicate in file</span> : <span className="text-emerald-700">Ready</span>}</td></tr>)}</tbody></table></div>
-        <p className="text-[11px] text-slate-500">Preview shows the first 12 valid rows. Existing email addresses in this event and repeated emails in this file are skipped during import. Names without email are allowed.</p>
+        <div className="overflow-x-auto rounded-lg border bg-white"><table className="w-full text-left text-xs"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-2">#</th><th className="p-2">Participant</th><th className="p-2">Email</th><th className="p-2">Review</th></tr></thead><tbody className="divide-y">{prepared.slice(0, 12).map((row, i) => <tr key={i}><td className="p-2">{i + 1}</td><td className="p-2">{row.full_name}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(row.email) ? <span className="text-rose-600">Invalid email</span> : row.email && existingEmails.has(row.email.toLowerCase()) ? <span className="text-rose-600">Already in event</span> : row.email && duplicateEmails.has(row.email.toLowerCase()) ? <span className="text-rose-600">Duplicate in file</span> : <span className="text-emerald-700">Ready</span>}</td></tr>)}</tbody></table></div>
+        <p className="text-[11px] text-slate-500">Ready to import: {readyRows.length} · Invalid email rows: {invalidEmailRows}. Preview shows the first 12 valid-name rows. Existing emails, repeated emails in the file and malformed email addresses are excluded. Names without email are allowed.</p>
         {error && <p className="text-xs text-rose-600">{error}</p>}
-        <div className="flex flex-wrap gap-2"><button disabled={busy || !prepared.length} onClick={runImport} className="rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{busy ? "Importing…" : `Import ${prepared.length - duplicateEmails.size} rows`}</button><button onClick={() => setImportOpen(false)} className="rounded-lg border bg-white px-4 py-2.5 text-xs">Cancel</button></div>
+        <div className="flex flex-wrap gap-2"><button disabled={busy || !readyRows.length} onClick={runImport} className="rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{busy ? "Importing…" : `Import ${readyRows.length} rows`}</button><button onClick={() => setImportOpen(false)} className="rounded-lg border bg-white px-4 py-2.5 text-xs">Cancel</button></div>
       </div>}
 
       {error && !open && !importOpen && <p role="alert" className="mb-3 text-xs text-rose-600">{error}</p>}
