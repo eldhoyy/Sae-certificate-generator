@@ -35,7 +35,7 @@ Run `npm run typecheck`, `npm run lint` and `npm run build`. GitHub Actions runs
 ## Known limitations before production
 - PDF template backgrounds are supported using the first page; browser preview depends on the device's built-in PDF viewer.
 - The editor uses a fixed landscape canvas; stored page-size preferences are not yet applied to rendering.
-- Bulk generation is queued in PostgreSQL and processed in small batches by a scheduled Vercel Cron route. Configure CRON_SECRET and SUPABASE_SERVICE_ROLE_KEY, enable Vercel Cron on a plan that supports the five-minute schedule, and monitor job progress. ZIP packaging is not yet part of the queued worker; individual PDFs remain downloadable from the issued-certificate list.
+- Bulk generation is queued in PostgreSQL and processed in small batches by a scheduled Vercel Cron route. Configure CRON_SECRET and SUPABASE_SERVICE_ROLE_KEY, enable Vercel Cron on a plan that supports the five-minute schedule, and monitor job progress. Completed job certificates can be packaged into a browser-generated ZIP (up to 2,500 PDFs per download); individual PDFs remain downloadable from the issued-certificate list.
 - Email is the duplicate key for imports; rows without email are accepted and may represent repeated names.
 - Template rendering uses standard PDF fonts; custom font upload/embedding and full typography parity are not implemented.
 - Administrator invitations use Supabase Auth and require the server-only service role key plus configured SMTP delivery.

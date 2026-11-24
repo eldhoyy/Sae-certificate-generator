@@ -166,6 +166,24 @@ export async function retryGenerationJob(input: { jobId: string }) {
   return { retried: Number(data || 0) };
 }
 
+
+export async function getGenerationJobCertificates(input: { jobId: string }) {
+  const { db, user } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.jobId)) throw new Error("Invalid generation job.");
+  const { data: items, error: itemError } = await db.from("generation_job_items")
+    .select("certificate_id").eq("job_id", input.jobId).eq("admin_id", user.id).eq("status", "completed");
+  if (itemError) throw new Error(itemError.message);
+  const ids = [...new Set((items || []).map((item) => item.certificate_id).filter(Boolean) as string[])];
+  const certificates: { id: string; certificate_id: string }[] = [];
+  for (let start = 0; start < ids.length; start += 250) {
+    const { data, error } = await db.from("certificates").select("id,certificate_id")
+      .eq("admin_id", user.id).in("certificate_id", ids.slice(start, start + 250));
+    if (error) throw new Error(error.message);
+    certificates.push(...(data || []));
+  }
+  return certificates;
+}
+
 export async function bulkIssueCertificates(input: {
   certificates: { eventId: string; participantId: string }[];
   templateId?: string | null;

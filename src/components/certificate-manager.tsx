@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import JSZip from "jszip";
 import { useRouter } from "next/navigation";
 import { Download, Award, AlertCircle, CheckCircle2, Package, Search } from "lucide-react";
-import { queueCertificateGeneration, issueOneCertificate, revokeCertificate, retryGenerationJob } from "@/app/actions";
+import { queueCertificateGeneration, issueOneCertificate, revokeCertificate, retryGenerationJob, getGenerationJobCertificates } from "@/app/actions";
 
 type Participant = { id: string; full_name: string; event_id: string; event_name: string };
 type Certificate = { id: string; certificate_id: string; participant_id: string; event_id: string; status: string; issue_date: string };
@@ -32,6 +33,7 @@ export function CertificateManager({ participants, certificates, events, templat
   const [revokeReason, setRevokeReason] = useState("");
   const [revokeBusy, setRevokeBusy] = useState(false);
   const [retryBusy, setRetryBusy] = useState("");
+  const [zipBusy, setZipBusy] = useState("");
   const router = useRouter();
 
   const pageSize = 20;
@@ -56,6 +58,33 @@ export function CertificateManager({ participants, certificates, events, templat
       router.refresh();
     } catch (e) { downloadWindow?.close(); setError(e instanceof Error ? e.message : "Could not issue certificate."); }
     finally { setBusy(""); }
+  }
+
+  async function downloadJobZip(job: GenerationJob) {
+    setZipBusy(job.id); setError(""); setNotice("");
+    try {
+      const certificates = await getGenerationJobCertificates({ jobId: job.id });
+      if (!certificates.length) throw new Error("This job has no completed certificates to download.");
+      if (certificates.length > 2500) throw new Error("This ZIP is larger than the browser export limit. Download certificates individually or split the event into smaller jobs.");
+      const zip = new JSZip();
+      let downloaded = 0;
+      for (let start = 0; start < certificates.length; start += 10) {
+        const batch = certificates.slice(start, start + 10);
+        const files = await Promise.all(batch.map(async (certificate) => {
+          const response = await fetch(`/api/certificates/${certificate.id}/pdf`);
+          if (!response.ok) throw new Error(`PDF download failed for ${certificate.certificate_id}`);
+          return { name: `${certificate.certificate_id}.pdf`, blob: await response.blob() };
+        }));
+        files.forEach((file) => { zip.file(file.name, file.blob); downloaded++; });
+      }
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = `certificates-${job.id.slice(0, 8)}.zip`; anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice(`Downloaded ${downloaded} certificates in a ZIP.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not create the ZIP download."); }
+    finally { setZipBusy(""); }
   }
 
   async function retryJob(job: GenerationJob) {
@@ -141,6 +170,7 @@ export function CertificateManager({ participants, certificates, events, templat
               {jobItems.filter((item) => item.job_id === job.id).slice(0, 4).map((item) => <p key={item.id} className="mt-1 text-[10px] text-rose-700">{participants.find((participant) => participant.id === item.participant_id)?.full_name || item.participant_id}: {item.error_message || "Generation failed"}</p>)}
               {job.failed_rows > 4 && <p className="mt-1 text-[10px] text-rose-600">And {job.failed_rows - 4} more failed row(s).</p>}
             </div>}
+            {job.succeeded_rows > 0 && <button disabled={zipBusy === job.id} onClick={() => downloadJobZip(job)} className="mt-2 rounded-lg border px-3 py-1.5 text-[10px] font-semibold text-blue-700 disabled:opacity-40">{zipBusy === job.id ? "Preparing ZIP…" : "Download completed PDFs as ZIP"}</button>}
           </div>;
         })}</div>}
         <p className="mt-3 text-[10px] leading-4 text-slate-400">The scheduled worker runs every five minutes when Vercel Cron is enabled. Refresh to see progress. Issued PDFs remain downloadable in the list below.</p>
