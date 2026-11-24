@@ -92,5 +92,10 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
   page.drawText("For participation in " + d.eventName, { x: 220, y: 250, size: 15, font: regular });
   page.drawText("Certificate ID: " + d.certificateId, { x: 45, y: 55, size: 10, font: regular });
   page.drawText("Issue date: " + (d.issueDate || new Date().toLocaleDateString("en-IN")), { x: 650, y: 55, size: 10, font: regular });
+  const qrDataUrl = await makeQrDataUrl(d.certificateId);
+  const qrBytes = Buffer.from(qrDataUrl.split(",")[1] || "", "base64");
+  const qrImage = await pdf.embedPng(qrBytes);
+  page.drawImage(qrImage, { x: 748, y: 92, width: 64, height: 64 });
+  page.drawText("SCAN TO VERIFY", { x: 742, y: 80, size: 6, font: bold, color: rgb(.15, .28, .62) });
   return pdf.save();
 }
