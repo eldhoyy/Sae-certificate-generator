@@ -38,6 +38,7 @@ export function CertificateManager({ participants, certificates, events, templat
   const pending = selectedParticipants.filter((p) => !issuedParticipantIds.has(`${p.event_id}:${p.id}`));
 
   async function issue(participant: Participant) {
+    const downloadWindow = window.open("about:blank", "_blank");
     setBusy(participant.id); setError(""); setNotice("");
     try {
       const result = await issueOneCertificate({
@@ -45,9 +46,10 @@ export function CertificateManager({ participants, certificates, events, templat
         templateId: templateId || null, idempotencyKey: crypto.randomUUID(),
       });
       setNotice(`${result.certificateId} issued. Opening PDF…`);
-      window.open(`/api/certificates/${result.id}/pdf`, "_blank", "noopener,noreferrer");
+      if (downloadWindow) downloadWindow.location.href = `/api/certificates/${result.id}/pdf`;
+      else setNotice(`${result.certificateId} issued. Allow pop-ups to open the PDF, or use the PDF link in Issued certificates.`);
       router.refresh();
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not issue certificate."); }
+    } catch (e) { downloadWindow?.close(); setError(e instanceof Error ? e.message : "Could not issue certificate."); }
     finally { setBusy(""); }
   }
 

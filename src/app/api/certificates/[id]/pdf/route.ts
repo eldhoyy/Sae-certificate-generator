@@ -44,10 +44,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     backgroundBytes = new Uint8Array(await background.arrayBuffer());
   }
 
-  const participant = certificate.participant_snapshot as { full_name?: string } | null;
+  const participant = certificate.participant_snapshot as { full_name?: string; event_name?: string } | null;
   const bytes = await createSimpleCertificatePdf({
     participantName: participant?.full_name || "Participant",
-    eventName: event?.name || "Event",
+    eventName: participant?.event_name || event?.name || "Event",
     certificateId: certificate.certificate_id,
     issueDate: certificate.issue_date,
     achievementTitle: certificate.achievement_title,

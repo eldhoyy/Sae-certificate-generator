@@ -37,6 +37,7 @@ export async function createParticipant(input: unknown) {
 export async function saveTemplate(input: unknown) {
   const data = templateSchema.parse(input);
   const { db, user } = await currentUser();
+  if (!data.background_path.startsWith(`${user.id}/`)) throw new Error("Template assets must belong to your administrator account.");
   const { error } = await db.from("templates").insert({ ...data, admin_id: user.id });
   if (error) throw new Error(error.message);
   revalidatePath("/templates");

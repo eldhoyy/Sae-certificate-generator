@@ -23,6 +23,8 @@ const initial: Item[] = [
   { id: 2, label: "Event name", token: "{{event_name}}", x: 28, y: 61, size: 15, color: "#475569", bold: false, fontFamily: "Helvetica" },
   { id: 3, label: "Certificate ID", token: "{{certificate_id}}", x: 28, y: 80, size: 11, color: "#64748b", bold: false, fontFamily: "Helvetica" },
   { id: 4, label: "Verification QR", token: "{{qr_code}}", x: 87, y: 76, size: 11, color: "#17264b", bold: false, fontFamily: "Helvetica" },
+  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica" },
+  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica" },
 ];
 
 export function TemplateEditor() {
