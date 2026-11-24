@@ -1,34 +1,18 @@
-# Certificate Management Platform
+# Certify — Certificate Management Platform
 
-A multi-tenant certificate management and verification platform inspired by the event-folder workflow observed in FIRL. This is an independent implementation with its own architecture, branding and code.
+Multi-tenant certificate creation, issuance and public verification.
 
-## Product goals
+## Includes
+Responsive workspace UI for dashboard, folders, events, participants, templates, certificates, verification, administrators and settings; Supabase auth clients; tenant-aware SQL migrations; interactive template layout editor; CSV/XLSX parsing, QR and PDF utilities.
 
-- Isolated administrator workspaces with a platform-level Super Admin.
-- Event folders, events, participants and reusable certificate templates.
-- A real visual certificate designer with uploaded PDF/image backgrounds.
-- Individual and bulk certificate issuance with stable unique IDs.
-- QR-enabled public verification and controlled certificate downloads.
-- Auditable, secure and responsive administration.
+## Local setup
+1. Node.js 20.9+ and npm.
+2. npm install
+3. Copy .env.example to .env.local and add Supabase URL and anon key.
+4. Apply supabase/migrations in filename order.
+5. Configure Supabase Auth redirect URLs.
+6. npm run dev
 
-## Technology direction
+Never expose service-role credentials to browser code. Promote the trusted platform owner to super_admin only through the Supabase SQL editor.
 
-- Next.js App Router + TypeScript
-- Tailwind CSS + shadcn/ui
-- Supabase Auth + PostgreSQL + Row Level Security + Storage
-- React Konva for the visual editor
-- pdf-lib for PDF composition
-- PapaParse and SheetJS for CSV/XLSX imports
-- qrcode for verification QR codes
-
-The exact dependency versions and deployment configuration will be recorded during implementation.
-
-## Project status
-
-**Stage:** Product specification and architecture foundation.
-
-No production functionality is claimed yet. See [ROADMAP.md](docs/ROADMAP.md) for implementation stages and [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the proposed system design.
-
-## Local development
-
-Setup instructions will be added with the first application scaffold. Do not commit secrets. Use environment variables documented in `.env.example` when available.
+The UI and integration foundation are present. Persistent workflows require Supabase configuration and server integration. Review docs/SETUP.md before production. No build or runtime tests have yet been run.

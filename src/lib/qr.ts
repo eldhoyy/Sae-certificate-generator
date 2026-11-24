@@ -1,0 +1,1 @@
+import QRCode from "qrcode";export function certificateVerificationUrl(id:string){const base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000";return base.replace(/\\/$/,"")+"/verify?id="+encodeURIComponent(id);}export async function makeQrDataUrl(id:string){return QRCode.toDataURL(certificateVerificationUrl(id),{width:320,margin:1,errorCorrectionLevel:"M"});}
