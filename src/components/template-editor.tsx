@@ -49,6 +49,12 @@ export function TemplateEditor() {
     setItems((value) => value.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
 
+  function removeField(id: number) {
+    const remaining = items.filter((item) => item.id !== id);
+    setItems(remaining);
+    setSelected(remaining[0]?.id ?? 0);
+  }
+
   function add() {
     const id = Math.max(0, ...items.map((item) => item.id)) + 1;
     setItems((value) => [...value, {
@@ -141,12 +147,14 @@ export function TemplateEditor() {
             onPointerMove={move}
             onPointerUp={() => setDrag(null)}
             onPointerLeave={() => setDrag(null)}
-            className="relative mx-auto aspect-[1.414/1] w-full max-w-[760px] overflow-hidden border border-slate-300 bg-white shadow-lg"
+            onPointerCancel={() => setDrag(null)}
+            className="relative mx-auto aspect-[1.414/1] w-full max-w-[760px] touch-none select-none overflow-hidden border border-slate-300 bg-white shadow-lg"
             style={{
               backgroundImage: previewUrl && background?.type !== "application/pdf" ? `url("${previewUrl}")` : "linear-gradient(135deg,#fff,#f1f5f9)",
               backgroundSize: "cover",
               transform: `scale(${scale})`,
               transformOrigin: "top center",
+              touchAction: "none",
             }}
           >
             {previewUrl && background?.type === "application/pdf" && <object data={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0`} type="application/pdf" aria-label="PDF template background preview" className="pointer-events-none absolute inset-0 h-full w-full" />}
@@ -194,7 +202,7 @@ export function TemplateEditor() {
           <div className="rounded-2xl border bg-white p-4">
             <div className="mb-3 flex justify-between">
               <h3 className="text-sm font-bold">Field properties</h3>
-              <button onClick={() => { setItems((value) => value.filter((item) => item.id !== selected)); setSelected(0); }} className="text-rose-500" aria-label="Delete field"><Trash2 size={14} /></button>
+              <button onClick={() => removeField(selected)} className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 hover:bg-rose-50" aria-label="Delete field"><Trash2 size={13} /> Delete field</button>
             </div>
             <label className="mb-3 block text-[11px]">Label
               <input value={current.label} onChange={(event) => patch(current.id, { label: event.target.value })} className="mt-1 w-full rounded-lg border p-2 text-xs" />
