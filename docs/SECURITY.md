@@ -10,7 +10,8 @@
 - Template layout version, field configuration and background asset path are snapshotted at issuance.
 - Public verification returns a limited set of certificate fields rather than a raw row.
 - Template, issued PDF and export storage buckets are private.
-- Core folder, event, participant, template and certificate mutations are recorded through audit triggers.
+- Folder, event, participant, template, certificate, organisation-setting and administrator role changes are recorded through audit triggers; certificate revocations include their reason.
+- Template source assets cannot be deleted while a saved template or issued certificate snapshot references them.
 
 ## Dependency security
 - SheetJS is pinned to the official 0.20.3 distribution because the older npm-registry 0.18.5 release has known spreadsheet-parser vulnerabilities. Re-run `npm audit` and review the full report whenever dependencies change.
@@ -31,4 +32,4 @@
 - A migration or source-code change does not configure the Supabase project itself. Dashboard settings, secrets, migration execution and live security tests remain operational steps.
 - Bulk generation currently uses bounded synchronous server actions and browser-side ZIP assembly; use a durable worker for large workloads.
 - The template editor and renderer support PNG/JPG/PDF backgrounds; PDF output embeds the first PDF page. Custom font uploads are not implemented.
-- Historical re-rendering still depends on retaining the private source background object in Supabase Storage.
+- Historical re-rendering depends on retaining the private source background object in Supabase Storage; the latest migration blocks authenticated deletion while any saved template or issued certificate references it.

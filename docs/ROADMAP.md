@@ -32,4 +32,4 @@
 - [ ] Apply organization settings to certificate branding and output preferences.
 - [ ] Add account invitation delivery and secure admin provisioning workflow.
 - [ ] Review dependency audit findings and update vulnerable packages.
-- [ ] Configure backups, monitoring, error reporting and retention.
+- [ ] Configure backups, monitoring, error reporting and retention.\n- [x] Increase certificate ID random suffix to 128 bits.\n- [x] Prevent deletion of template assets referenced by saved templates or issued certificates.\n- [x] Audit organisation settings, administrator role changes and certificate revocation reasons.\n
