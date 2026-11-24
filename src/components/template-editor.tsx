@@ -46,7 +46,7 @@ export function TemplateEditor() {
   function add() {
     const id = Math.max(0, ...items.map((item) => item.id)) + 1;
     setItems((value) => [...value, {
-      id, label: "Custom text", token: "{{custom_text}}",
+      id, label: "Custom text", token: "Custom text",
       x: 40, y: 52, size: 18, color: "#17264b", bold: false, fontFamily: "Helvetica",
     }]);
     setSelected(id);
