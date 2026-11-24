@@ -10,7 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 const nav = [
-  ["Overview", "/", LayoutDashboard],
+  ["Overview", "/workspace", LayoutDashboard],
   ["Event folders", "/folders", FolderKanban],
   ["Events", "/events", CalendarDays],
   ["Participants", "/participants", Users],
