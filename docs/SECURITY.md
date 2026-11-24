@@ -7,6 +7,7 @@
 - Certificate issuance validates the authenticated owner of the event, participant and optional template.
 - Issuance is idempotent and a database unique index enforces one certificate per participant per event.
 - Certificate IDs are globally unique; revocation preserves the original certificate record and identifier.
+- Template layout version, field configuration and background asset path are snapshotted at issuance.
 - Public verification returns a limited set of certificate fields rather than a raw row.
 - Template, issued PDF and export storage buckets are private.
 - Core folder, event, participant, template and certificate mutations are recorded through audit triggers.
@@ -27,4 +28,4 @@
 - A migration or source-code change does not configure the Supabase project itself. Dashboard settings, secrets, migration execution and live security tests remain operational steps.
 - Bulk generation currently uses bounded synchronous server actions and browser-side ZIP assembly; use a durable worker for large workloads.
 - The template editor and renderer currently support PNG/JPG backgrounds, not PDF backgrounds or custom font uploads.
-- Template layout snapshots are not yet persisted with the issuance, so historical re-rendering after template changes needs a snapshot implementation.
+- Historical re-rendering still depends on retaining the private source background object in Supabase Storage.
