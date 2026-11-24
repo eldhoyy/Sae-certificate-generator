@@ -41,13 +41,12 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
   const page = pdf.addPage([842, 595]);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const fontSets = {
-    Helvetica: { regular, bold },
-    TimesRoman: { regular: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold) },
-    Courier: { regular: await pdf.embedFont(StandardFonts.Courier), bold: await pdf.embedFont(StandardFonts.CourierBold) },
-  };
-
   if (d.template && d.backgroundBytes) {
+    const fontSets = {
+      Helvetica: { regular, bold },
+      TimesRoman: { regular: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold) },
+      Courier: { regular: await pdf.embedFont(StandardFonts.Courier), bold: await pdf.embedFont(StandardFonts.CourierBold) },
+    };
     if (d.template.background_mime === "application/pdf") {
       const [embeddedPage] = await pdf.embedPdf(d.backgroundBytes, [0]);
       const scale = Math.min(842 / embeddedPage.width, 595 / embeddedPage.height);
