@@ -61,8 +61,8 @@ export function TemplateEditor() {
 
   function chooseBackground(file?: File) {
     if (!file) return;
-    if (!["image/png", "image/jpeg"].includes(file.type)) {
-      setError("Choose a PNG or JPG background image. PDF background preview is not available in this editor yet.");
+    if (!["image/png", "image/jpeg", "application/pdf"].includes(file.type)) {
+      setError("Choose a PNG, JPG or PDF background.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -85,7 +85,7 @@ export function TemplateEditor() {
       const { data: auth, error: authError } = await client.auth.getUser();
       if (authError || !auth.user) throw new Error("Sign in before saving a template.");
 
-      const extension = background.type === "image/png" ? "png" : "jpg";
+      const extension = background.type === "image/png" ? "png" : background.type === "application/pdf" ? "pdf" : "jpg";
       const path = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
       const { error: uploadError } = await client.storage
         .from("certificate-templates")
@@ -119,7 +119,7 @@ export function TemplateEditor() {
         <div className="mb-4 flex flex-wrap justify-between gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border bg-white px-3 py-2 text-xs font-semibold">
             <Upload size={14} /> Upload background
-            <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(event) => chooseBackground(event.target.files?.[0])} />
+            <input type="file" accept="image/png,image/jpeg,application/pdf" className="hidden" onChange={(event) => chooseBackground(event.target.files?.[0])} />
           </label>
           <div className="flex gap-2">
             <button onClick={add} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white"><Plus size={13} className="mr-1 inline" />Add field</button>
@@ -134,12 +134,13 @@ export function TemplateEditor() {
             onPointerLeave={() => setDrag(null)}
             className="relative mx-auto aspect-[1.414/1] w-full max-w-[760px] overflow-hidden border border-slate-300 bg-white shadow-lg"
             style={{
-              backgroundImage: previewUrl ? `url("${previewUrl}")` : "linear-gradient(135deg,#fff,#f1f5f9)",
+              backgroundImage: previewUrl && background?.type !== "application/pdf" ? `url("${previewUrl}")` : "linear-gradient(135deg,#fff,#f1f5f9)",
               backgroundSize: "cover",
               transform: `scale(${scale})`,
               transformOrigin: "top center",
             }}
           >
+            {previewUrl && background?.type === "application/pdf" && <object data={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0`} type="application/pdf" aria-label="PDF template background preview" className="pointer-events-none absolute inset-0 h-full w-full" />}
             <div className="pointer-events-none absolute inset-[4%] border border-dashed border-slate-200" />
             <p className="pointer-events-none absolute top-[16%] w-full text-center text-[9px] font-bold uppercase tracking-[.35em] text-slate-300">Certificate of achievement</p>
             {items.map((field) => (
@@ -160,7 +161,7 @@ export function TemplateEditor() {
             ))}
           </div>
         </div>
-        <p className="mt-4 text-[10px] text-slate-400">Drag fields to position them · Landscape canvas · Image backgrounds</p>
+        <p className="mt-4 text-[10px] text-slate-400">Drag fields to position them · Landscape canvas · PNG, JPG and PDF backgrounds</p>
       </div>
 
       <div className="space-y-4">

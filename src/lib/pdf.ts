@@ -42,13 +42,19 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   if (d.template && d.backgroundBytes) {
-    const image = d.template.background_mime === "image/png"
-      ? await pdf.embedPng(d.backgroundBytes)
-      : d.template.background_mime === "image/jpeg"
-        ? await pdf.embedJpg(d.backgroundBytes)
-        : null;
-    if (image) {
+    if (d.template.background_mime === "application/pdf") {
+      const [embeddedPage] = await pdf.embedPdf(d.backgroundBytes, [0]);
+      const scale = Math.min(842 / embeddedPage.width, 595 / embeddedPage.height);
+      const width = embeddedPage.width * scale;
+      const height = embeddedPage.height * scale;
+      page.drawPage(embeddedPage, { x: (842 - width) / 2, y: (595 - height) / 2, width, height });
+    } else {
+      const image = d.template.background_mime === "image/png"
+        ? await pdf.embedPng(d.backgroundBytes)
+        : await pdf.embedJpg(d.backgroundBytes);
       page.drawImage(image, { x: 0, y: 0, width: 842, height: 595 });
+    }
+    if (d.template.background_mime === "application/pdf" || d.template.background_mime === "image/png" || d.template.background_mime === "image/jpeg") {
       const values: Record<string, string> = {
         "{{participant_name}}": d.participantName,
         "{{event_name}}": d.eventName,
