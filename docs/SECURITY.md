@@ -12,6 +12,9 @@
 - Template, issued PDF and export storage buckets are private.
 - Core folder, event, participant, template and certificate mutations are recorded through audit triggers.
 
+## Dependency security
+- SheetJS is pinned to the official 0.20.3 distribution because the older npm-registry 0.18.5 release has known spreadsheet-parser vulnerabilities. Re-run `npm audit` and review the full report whenever dependencies change.
+
 ## Required before production
 1. Disable public sign-ups in Supabase Authentication settings. Provision accounts only through a trusted operator process.
 2. Create the first Super Admin using the controlled SQL bootstrap in `docs/SETUP.md`; never expose role assignment publicly.
