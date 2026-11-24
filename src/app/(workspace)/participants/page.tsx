@@ -1,2 +1,5 @@
-import {Heading} from "@/components/ui";import {ParticipantManager} from "@/components/participant-manager";import {createClient} from "@/lib/supabase/server";
-export default async function Page(){const db=await createClient();const [{data:events,error:e1},{data:participants,error:e2}]=await Promise.all([db.from("events").select("id,name").order("name"),db.from("participants").select("id,full_name,email,event_id,created_at").order("created_at",{ascending:false}).limit(500)]);if(e1)throw new Error(e1.message);if(e2)throw new Error(e2.message);return <><Heading eyebrow="Attendee management" title="Participants" desc="Add participants to your events and manage their records."/><ParticipantManager events={events||[]} participants={participants||[]}/></>}
+import { redirect } from "next/navigation";
+
+export default function ParticipantsPage() {
+  redirect("/folders");
+}
