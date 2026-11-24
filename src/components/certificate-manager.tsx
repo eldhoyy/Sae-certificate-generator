@@ -91,7 +91,7 @@ export function CertificateManager({ participants, certificates, events, templat
         anchor.href = url;
         anchor.download = "certificates.zip";
         anchor.click();
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
       setNotice(`Generated ${added} PDF files in the ZIP. ${failedDownloads} issuance or download errors.`);
       router.refresh();
