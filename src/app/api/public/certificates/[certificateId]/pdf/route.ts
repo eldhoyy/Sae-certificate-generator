@@ -36,13 +36,15 @@ export async function GET(
     return NextResponse.json({ error: "This certificate has been revoked and cannot be downloaded as valid." }, { status: 410 });
   }
 
+  type PdfField = { token?: string; label?: string; x?: number; y?: number; size?: number; color?: string; bold?: boolean; fontFamily?: "Helvetica" | "TimesRoman" | "Courier"; align?: "left" | "center" | "right"; italic?: boolean; width?: number };
+  type PdfLayout = { fields?: PdfField[] };
   const frozen = certificate.layout_snapshot as {
-    layout_json?: { fields?: Record<string, unknown>[] };
+    layout_json?: PdfLayout;
     background_path?: string;
     background_mime?: string;
   } | null;
 
-  let template: { background_path: string; background_mime: string; layout_json: { fields?: Record<string, unknown>[] } | null } | null = null;
+  let template: { background_path: string; background_mime: string; layout_json: PdfLayout | null } | null = null;
   if (certificate.template_id) {
     const { data } = await db.from("templates")
       .select("background_path,background_mime,layout_json")
