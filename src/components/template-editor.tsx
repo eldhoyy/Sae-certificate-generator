@@ -192,9 +192,14 @@ export function TemplateEditor() {
         <div className="rounded-2xl border bg-white p-4">
           <h3 className="mb-3 text-sm font-bold">Design elements</h3>
           {items.map((field) => (
-            <button key={field.id} onClick={() => setSelected(field.id)} className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs ${selected === field.id ? "bg-blue-50 text-blue-700" : "text-slate-600"}`}>
-              <Type size={14} />{field.label}
-            </button>
+            <div key={field.id} className={`flex items-center gap-1 rounded-lg px-1 ${selected === field.id ? "bg-blue-50" : "hover:bg-slate-50"}`}>
+              <button type="button" onClick={() => setSelected(field.id)} className={`flex min-w-0 flex-1 items-center gap-2 px-2 py-2 text-left text-xs ${selected === field.id ? "text-blue-700" : "text-slate-600"}`}>
+                <Type size={14} /><span className="truncate">{field.label || "Untitled field"}</span>
+              </button>
+              <button type="button" onClick={() => removeField(field.id)} aria-label={`Delete ${field.label || "field"}`} title="Delete field" className="grid size-8 shrink-0 place-items-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600">
+                <Trash2 size={14} />
+              </button>
+            </div>
           ))}
           <button onClick={add} className="mt-3 w-full rounded-lg border border-dashed py-2 text-xs">+ Add text field</button>
         </div>
