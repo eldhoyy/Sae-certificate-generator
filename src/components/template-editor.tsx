@@ -16,17 +16,20 @@ type Item = {
   color: string;
   bold: boolean;
   fontFamily: "Helvetica" | "TimesRoman" | "Courier";
+  align: "left" | "center" | "right";
+  italic: boolean;
+  width: number;
 };
 
 const initial: Item[] = [
-  { id: 1, label: "Participant name", token: "{{participant_name}}", x: 28, y: 42, size: 28, color: "#17264b", bold: true, fontFamily: "Helvetica" },
-  { id: 2, label: "Event name", token: "{{event_name}}", x: 28, y: 61, size: 15, color: "#475569", bold: false, fontFamily: "Helvetica" },
-  { id: 3, label: "Certificate ID", token: "{{certificate_id}}", x: 28, y: 80, size: 11, color: "#64748b", bold: false, fontFamily: "Helvetica" },
-  { id: 4, label: "Verification QR", token: "{{qr_code}}", x: 87, y: 76, size: 11, color: "#17264b", bold: false, fontFamily: "Helvetica" },
-  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica" },
-  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica" },
-  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica" },
-  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica" },
+  { id: 1, label: "Participant name", token: "{{participant_name}}", x: 28, y: 42, size: 28, color: "#17264b", bold: true, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 2, label: "Event name", token: "{{event_name}}", x: 28, y: 61, size: 15, color: "#475569", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 3, label: "Certificate ID", token: "{{certificate_id}}", x: 28, y: 80, size: 11, color: "#64748b", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 4, label: "Verification QR", token: "{{qr_code}}", x: 87, y: 76, size: 11, color: "#17264b", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
+  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica", align: "left", italic: false, width: 75 },
 ];
 
 export function TemplateEditor() {
@@ -52,7 +55,7 @@ export function TemplateEditor() {
     const id = Math.max(0, ...items.map((item) => item.id)) + 1;
     setItems((value) => [...value, {
       id, label: "Custom text", token: "Custom text",
-      x: 40, y: 52, size: 18, color: "#17264b", bold: false, fontFamily: "Helvetica",
+      x: 40, y: 52, size: 18, color: "#17264b", bold: false, fontFamily: "Helvetica", align: "left", italic: false, width: 75,
     }]);
     setSelected(id);
   }
@@ -163,9 +166,9 @@ export function TemplateEditor() {
                 }}
                 onClick={() => { if (!preview) setSelected(field.id); }}
                 className={`absolute max-w-[80%] cursor-move whitespace-nowrap rounded px-2 py-1 text-left ${selected === field.id ? "ring-2 ring-blue-500 ring-offset-2" : "hover:ring-1 hover:ring-blue-300"}`}
-                style={{ left: `${field.x}%`, top: `${field.y}%`, fontSize: field.size, color: field.color, fontWeight: field.bold ? 700 : 400, fontFamily: field.fontFamily === "TimesRoman" ? "Georgia, serif" : field.fontFamily === "Courier" ? "monospace" : "Arial, sans-serif", cursor: preview ? "default" : "move" }}
+                style={{ left: `${field.x}%`, top: `${field.y}%`, fontSize: field.size, color: field.color, fontWeight: field.bold ? 700 : 400, fontFamily: field.fontFamily === "TimesRoman" ? "Georgia, serif" : field.fontFamily === "Courier" ? "monospace" : "Arial, sans-serif", fontStyle: field.italic ? "italic" : "normal", textAlign: field.align, width: `${field.width}%`, whiteSpace: "normal", cursor: preview ? "default" : "move" }}
               >
-                {preview ? (field.token === "{{participant_name}}" ? "Alex Johnson" : field.token === "{{event_name}}" ? "Annual Technical Symposium 2026" : field.token === "{{certificate_id}}" ? "CERT-20261124-8A2F…" : field.token === "{{issue_date}}" ? "24 Nov 2026" : field.token === "{{achievement_title}}" ? "Certificate of Participation" : field.token === "{{qr_code}}" ? "▦ VERIFY" : field.token) : field.token}
+                {preview ? (field.token === "{{participant_name}}" ? "Alex Johnson" : field.token === "{{event_name}}" ? "Annual Technical Symposium 2026" : field.token === "{{certificate_id}}" ? "CERT-20261124-8A2F…" : field.token === "{{issue_date}}" ? "24 Nov 2026" : field.token === "{{achievement_title}}" ? "Certificate of Participation" : field.token.startsWith("{{custom:") ? "Sample value" : field.token === "{{qr_code}}" ? "▦ VERIFY" : field.token) : field.token}
               </button>
             ))}
           </div>
@@ -207,8 +210,12 @@ export function TemplateEditor() {
             <label className="mb-3 flex items-center justify-between text-[11px]">Text colour
               <input type="color" value={current.color} onChange={(event) => patch(current.id, { color: event.target.value })} />
             </label>
+            <label className="mb-3 block text-[11px]">Field width · {current.width}%<input type="range" min="10" max="100" value={current.width} onChange={(event) => patch(current.id, { width: Number(event.target.value) })} className="mt-2 w-full"/></label>
+            <label className="mb-3 block text-[11px]">Text alignment<select value={current.align} onChange={(event) => patch(current.id, { align: event.target.value as Item["align"] })} className="mt-1 w-full rounded-lg border p-2 text-xs"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
             <label className="mb-3 block text-[11px]">Font family<select value={current.fontFamily} onChange={(event) => patch(current.id, { fontFamily: event.target.value as Item["fontFamily"] })} className="mt-1 w-full rounded-lg border p-2 text-xs"><option value="Helvetica">Helvetica</option><option value="TimesRoman">Times New Roman</option><option value="Courier">Courier</option></select></label>
-            <label className="flex gap-2 text-xs"><input type="checkbox" checked={current.bold} onChange={(event) => patch(current.id, { bold: event.target.checked })} /> Bold</label>
+            <label className="mb-2 flex gap-2 text-xs"><input type="checkbox" checked={current.bold} onChange={(event) => patch(current.id, { bold: event.target.checked })} /> Bold</label>
+            <label className="flex gap-2 text-xs"><input type="checkbox" checked={current.italic} onChange={(event) => patch(current.id, { italic: event.target.checked })} /> Italic</label>
+            <p className="mt-3 text-[10px] leading-4 text-slate-400">Custom participant values use tokens like {"{{custom:department}}"}; map the matching column during CSV/Excel import.</p>
           </div>
         )}
         {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-xs text-rose-700">{error}</p>}

@@ -10,6 +10,9 @@ type LayoutField = {
   color?: string;
   bold?: boolean;
   fontFamily?: "Helvetica" | "TimesRoman" | "Courier";
+  align?: "left" | "center" | "right";
+  italic?: boolean;
+  width?: number;
 };
 
 type CertificateTemplate = {
@@ -23,6 +26,7 @@ type CertificateData = {
   certificateId: string;
   issueDate?: string;
   achievementTitle?: string | null;
+  customFields?: Record<string, string | number | boolean | null>;
   template?: CertificateTemplate | null;
   backgroundBytes?: Uint8Array | null;
 };
@@ -43,9 +47,9 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   if (d.template && d.backgroundBytes) {
     const fontSets = {
-      Helvetica: { regular, bold },
-      TimesRoman: { regular: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold) },
-      Courier: { regular: await pdf.embedFont(StandardFonts.Courier), bold: await pdf.embedFont(StandardFonts.CourierBold) },
+      Helvetica: { regular, bold, italic: await pdf.embedFont(StandardFonts.HelveticaOblique), boldItalic: await pdf.embedFont(StandardFonts.HelveticaBoldOblique) },
+      TimesRoman: { regular: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold), italic: await pdf.embedFont(StandardFonts.TimesRomanItalic), boldItalic: await pdf.embedFont(StandardFonts.TimesRomanBoldItalic) },
+      Courier: { regular: await pdf.embedFont(StandardFonts.Courier), bold: await pdf.embedFont(StandardFonts.CourierBold), italic: await pdf.embedFont(StandardFonts.CourierOblique), boldItalic: await pdf.embedFont(StandardFonts.CourierBoldOblique) },
     };
     if (d.template.background_mime === "application/pdf") {
       const [embeddedPage] = await pdf.embedPdf(d.backgroundBytes, [0]);
@@ -80,17 +84,27 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
           page.drawImage(qr, { x, y: 595 - top - 72, width: 72, height: 72 });
           continue;
         }
-        const value = values[token] ?? (token.startsWith("{{") ? field.label || "" : token);
+        const customMatch = token.match(/^\\{\\{custom:([^}]{1,80})\\}\\}$/);
+        const customValue = customMatch ? d.customFields?.[customMatch[1].trim()] : undefined;
+        const value = customMatch
+          ? (customValue === null || customValue === undefined ? "" : String(customValue))
+          : values[token] ?? (token.startsWith("{{") ? field.label || "" : token);
         if (!value) continue;
         const selectedFonts = fontSets[field.fontFamily || "Helvetica"] || fontSets.Helvetica;
-        const font: PDFFont = field.bold ? selectedFonts.bold : selectedFonts.regular;
+        const font: PDFFont = field.bold
+          ? (field.italic ? selectedFonts.boldItalic : selectedFonts.bold)
+          : (field.italic ? selectedFonts.italic : selectedFonts.regular);
+        const maxWidth = Math.max(40, Math.min(826 - x, 842 * (Math.max(10, Math.min(100, Number(field.width) || 80)) / 100)));
+        const textWidth = font.widthOfTextAtSize(value.slice(0, 180), size);
+        const align = field.align || "left";
+        const drawX = align === "center" ? x - textWidth / 2 : align === "right" ? x - textWidth : x;
         page.drawText(value.slice(0, 180), {
-          x,
+          x: Math.max(8, drawX),
           y: Math.max(8, 595 - top - size),
           size,
           font,
           color: safeColor(field.color),
-          maxWidth: Math.max(40, 842 - x - 16),
+          maxWidth,
         });
       }
       return pdf.save();

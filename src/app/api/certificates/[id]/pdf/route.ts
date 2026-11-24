@@ -6,7 +6,7 @@ import { isValidCertificateBackground } from "@/lib/file-validation";
 export const dynamic = "force-dynamic";
 
 type FrozenLayout = {
-  layout_json?: { fields?: { token?: string; label?: string; x?: number; y?: number; size?: number; color?: string; bold?: boolean }[] };
+  layout_json?: { fields?: { token?: string; label?: string; x?: number; y?: number; size?: number; color?: string; bold?: boolean; fontFamily?: "Helvetica" | "TimesRoman" | "Courier"; align?: "left" | "center" | "right"; italic?: boolean; width?: number }[] };
   background_path?: string;
   background_mime?: string;
 };
@@ -48,7 +48,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
   }
 
-  const participant = certificate.participant_snapshot as { full_name?: string; event_name?: string } | null;
+  const participant = certificate.participant_snapshot as { full_name?: string; event_name?: string; custom_fields?: Record<string, string | number | boolean | null> } | null;
   let bytes: Uint8Array;
   try {
     bytes = await createSimpleCertificatePdf({
@@ -57,6 +57,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     certificateId: certificate.certificate_id,
     issueDate: certificate.issue_date,
     achievementTitle: certificate.achievement_title,
+    customFields: participant?.custom_fields || {},
     template: backgroundMime ? { background_mime: backgroundMime, layout_json: layout } : null,
     backgroundBytes,
     });

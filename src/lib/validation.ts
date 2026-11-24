@@ -8,6 +8,9 @@ const templateFieldSchema = z.object({
   y: z.number().min(0).max(100), size: z.number().min(9).max(52),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/), bold: z.boolean(),
   fontFamily: z.enum(["Helvetica","TimesRoman","Courier"]),
+  align: z.enum(["left","center","right"]).optional().default("left"),
+  italic: z.boolean().optional().default(false),
+  width: z.number().min(10).max(100).optional().default(75),
 });
 export const templateSchema=z.object({
   name:z.string().trim().min(1).max(120), background_path:z.string().min(1).max(500),
