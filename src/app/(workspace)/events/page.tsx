@@ -1,2 +1,5 @@
-import {Heading} from "@/components/ui";import {EventManager} from "@/components/event-manager";import {createClient} from "@/lib/supabase/server";
-export default async function Page(){const db=await createClient();const [{data:events,error:e1},{data:folders,error:e2}]=await Promise.all([db.from("events").select("id,name,starts_at,ends_at,folder_id").order("created_at",{ascending:false}),db.from("event_folders").select("id,name").order("name")]);if(e1)throw new Error(e1.message);if(e2)throw new Error(e2.message);return <><Heading eyebrow="Programmes" title="Events" desc="Manage individual events, dates and certificate workflows."/><EventManager events={events||[]} folders={folders||[]}/></>}
+import { redirect } from "next/navigation";
+
+export default function EventsPage() {
+  redirect("/folders");
+}
