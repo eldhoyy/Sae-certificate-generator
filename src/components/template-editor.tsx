@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Type, Upload, ZoomIn, ZoomOut, Save, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Type, Upload, ZoomIn, ZoomOut, Save, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { saveTemplate } from "@/app/actions";
 
@@ -40,6 +40,7 @@ export function TemplateEditor() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [drag, setDrag] = useState<number | null>(null);
+  const [preview, setPreview] = useState(false);
   const router = useRouter();
   const current = items.find((item) => item.id === selected);
 
@@ -128,6 +129,7 @@ export function TemplateEditor() {
             <input type="file" accept="image/png,image/jpeg,application/pdf" className="hidden" onChange={(event) => chooseBackground(event.target.files?.[0])} />
           </label>
           <div className="flex gap-2">
+            <button onClick={() => setPreview((value) => !value)} className="rounded-lg border bg-white px-3 py-2 text-xs font-semibold text-slate-700">{preview ? <EyeOff size={13} className="mr-1 inline" /> : <Eye size={13} className="mr-1 inline" />}{preview ? "Edit layout" : "Preview sample"}</button>
             <button onClick={add} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white"><Plus size={13} className="mr-1 inline" />Add field</button>
             <button onClick={() => setScale((value) => Math.max(.7, value - .1))} className="rounded-lg bg-white p-2" aria-label="Zoom out"><ZoomOut size={14} /></button>
             <button onClick={() => setScale((value) => Math.min(1.2, value + .1))} className="rounded-lg bg-white p-2" aria-label="Zoom in"><ZoomIn size={14} /></button>
@@ -154,20 +156,21 @@ export function TemplateEditor() {
                 key={field.id}
                 type="button"
                 onPointerDown={(event) => {
+                  if (preview) return;
                   event.currentTarget.setPointerCapture(event.pointerId);
                   setDrag(field.id);
                   setSelected(field.id);
                 }}
-                onClick={() => setSelected(field.id)}
+                onClick={() => { if (!preview) setSelected(field.id); }}
                 className={`absolute max-w-[80%] cursor-move whitespace-nowrap rounded px-2 py-1 text-left ${selected === field.id ? "ring-2 ring-blue-500 ring-offset-2" : "hover:ring-1 hover:ring-blue-300"}`}
-                style={{ left: `${field.x}%`, top: `${field.y}%`, fontSize: field.size, color: field.color, fontWeight: field.bold ? 700 : 400 }}
+                style={{ left: `${field.x}%`, top: `${field.y}%`, fontSize: field.size, color: field.color, fontWeight: field.bold ? 700 : 400, fontFamily: field.fontFamily === "TimesRoman" ? "Georgia, serif" : field.fontFamily === "Courier" ? "monospace" : "Arial, sans-serif", cursor: preview ? "default" : "move" }}
               >
-                {field.token}
+                {preview ? (field.token === "{{participant_name}}" ? "Alex Johnson" : field.token === "{{event_name}}" ? "Annual Technical Symposium 2026" : field.token === "{{certificate_id}}" ? "CERT-20261124-8A2F…" : field.token === "{{issue_date}}" ? "24 Nov 2026" : field.token === "{{achievement_title}}" ? "Certificate of Participation" : field.token === "{{qr_code}}" ? "▦ VERIFY" : field.token) : field.token}
               </button>
             ))}
           </div>
         </div>
-        <p className="mt-4 text-[10px] text-slate-400">Drag fields to position them · Landscape canvas · PNG, JPG and PDF backgrounds</p>
+        <p className="mt-4 text-[10px] text-slate-400">{preview ? "Sample preview · Values shown are examples and will be replaced with each participant’s details." : "Drag fields to position them · Landscape canvas · PNG, JPG and PDF backgrounds"}</p>
       </div>
 
       <div className="space-y-4">
