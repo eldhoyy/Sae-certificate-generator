@@ -36,7 +36,7 @@
 - [ ] Review dependency audit findings and update vulnerable packages.
 - [ ] Configure backups, monitoring, error reporting and retention.
 - [ ] Configure CRON_SECRET and confirm Vercel Cron plan/schedule support.
-- [x] Increase certificate ID random suffix to 128 bits.
+- [x] Use a UUIDv4-strength random certificate ID suffix (122 random bits) with a global unique constraint.
 - [x] Prevent deletion of template assets referenced by saved templates or issued certificates.
 - [x] Audit organisation settings, administrator role changes and certificate revocation reasons.
 
