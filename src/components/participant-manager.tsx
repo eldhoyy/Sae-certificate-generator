@@ -36,7 +36,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
   const prepared = useMemo(() => rows.map((row) => ({
     full_name: String(row[nameField] ?? "").trim(),
     email: emailField ? String(row[emailField] ?? "").trim() : "",
-    custom_fields: Object.fromEntries(customFieldHeaders.map((header): [string, string] => [header, String(row[header] ?? "").trim()]).filter(([, value]) => value.length > 0)),
+    custom_fields: Object.fromEntries(customFieldHeaders.filter((header) => header !== nameField && header !== emailField).map((header): [string, string] => [header, String(row[header] ?? "").trim()]).filter(([, value]) => value.length > 0)),
   })).filter((row) => row.full_name), [rows, nameField, emailField, customFieldHeaders]);
 
   const existingEmails = useMemo(() => new Set(participants.filter((p) => p.event_id === event && p.email).map((p) => p.email!.toLowerCase())), [participants, event]);
