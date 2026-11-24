@@ -109,7 +109,7 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" className="rounded-lg border p-3 text-sm" />
         <select required value={event} onChange={(e) => setEvent(e.target.value)} className="rounded-lg border p-3 text-sm sm:col-span-2">{events.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
         {error && <p className="text-xs text-red-600 sm:col-span-2">{error}</p>}
-        <button disabled={busy} className="rounded-lg bg-slate-900 p-3 text-xs font-semibold text-white sm:col-span-2">{busy ? "Saving…" : "Save participant"}</button>
+        <button disabled={busy} className="rounded-lg bg-slate-900 p-3 text-xs font-semibold text-white sm:col-span-2">{busy ? "Saving…" : "Save record only"}</button>
       </form>}
 
       {importOpen && <div className="mb-5 space-y-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
