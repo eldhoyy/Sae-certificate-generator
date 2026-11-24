@@ -98,12 +98,15 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
         const font: PDFFont = field.bold
           ? (field.italic ? selectedFonts.boldItalic : selectedFonts.bold)
           : (field.italic ? selectedFonts.italic : selectedFonts.regular);
-        const maxWidth = Math.max(40, Math.min(826 - x, 842 * (Math.max(10, Math.min(100, Number(field.width) || 80)) / 100)));
+        const maxWidth = Math.max(40, Math.min(842 - x - 8, 842 * (Math.max(10, Math.min(100, Number(field.width) || 80)) / 100)));
         const textWidth = font.widthOfTextAtSize(value.slice(0, 180), size);
         const align = field.align || "left";
-        const drawX = align === "center" ? x - textWidth / 2 : align === "right" ? x - textWidth : x;
+        const measuredWidth = Math.min(textWidth, maxWidth);
+        const drawX = align === "center" ? x + (maxWidth - measuredWidth) / 2
+          : align === "right" ? x + maxWidth - measuredWidth
+          : x;
         page.drawText(value.slice(0, 180), {
-          x: Math.max(8, drawX),
+          x: Math.max(8, Math.min(842 - measuredWidth - 8, drawX)),
           y: Math.max(8, 595 - top - size),
           size,
           font,
