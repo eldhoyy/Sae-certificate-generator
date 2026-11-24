@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Award, AlertCircle, CheckCircle2, Package, Search } from "lucide-react";
-import { bulkIssueCertificates, issueOneCertificate } from "@/app/actions";
+import { bulkIssueCertificates, issueOneCertificate, revokeCertificate } from "@/app/actions";
 
 type Participant = { id: string; full_name: string; event_id: string; event_name: string };
 type Certificate = { id: string; certificate_id: string; participant_id: string; event_id: string; status: string; issue_date: string };
@@ -25,6 +25,9 @@ export function CertificateManager({ participants, certificates, events, templat
   const [search, setSearch] = useState("");
   const [participantPage, setParticipantPage] = useState(0);
   const [certificatePage, setCertificatePage] = useState(0);
+  const [revokeTarget, setRevokeTarget] = useState<Certificate | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
+  const [revokeBusy, setRevokeBusy] = useState(false);
   const router = useRouter();
 
   const pageSize = 20;
@@ -46,6 +49,17 @@ export function CertificateManager({ participants, certificates, events, templat
       router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Could not issue certificate."); }
     finally { setBusy(""); }
+  }
+
+  async function confirmRevoke() {
+    if (!revokeTarget) return;
+    setRevokeBusy(true); setError(""); setNotice("");
+    try {
+      await revokeCertificate({ certificateId: revokeTarget.id, reason: revokeReason });
+      setNotice(`${revokeTarget.certificate_id} has been revoked.`);
+      setRevokeTarget(null); setRevokeReason(""); router.refresh();
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not revoke certificate."); }
+    finally { setRevokeBusy(false); }
   }
 
   async function bulkIssueAndDownload() {
@@ -117,9 +131,10 @@ export function CertificateManager({ participants, certificates, events, templat
       </section>
       <section className="rounded-2xl border bg-white p-5">
         <div className="mb-4 flex items-center justify-between"><div><h2 className="font-semibold">Issued certificates</h2><p className="mt-1 text-xs text-slate-500">{visible.length} records</p></div><Award size={19} className="text-blue-700" /></div>
-        {visible.length === 0 ? <p className="py-8 text-center text-sm text-slate-400">No certificates issued yet.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2">Certificate ID</th><th>Participant</th><th>Issued</th><th>Status</th><th /></tr></thead><tbody className="divide-y">{certificateRows.map((c) => <tr key={c.id}><td className="py-3 font-semibold">{c.certificate_id}</td><td>{participants.find((p) => p.id === c.participant_id)?.full_name || "—"}</td><td>{c.issue_date}</td><td><span className={c.status === "valid" ? "text-emerald-700" : "text-rose-700"}>{c.status}</span></td><td><a href={`/api/certificates/${c.id}/pdf`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-700"><Download size={13} /> PDF</a></td></tr>)}</tbody></table></div>}
+        {visible.length === 0 ? <p className="py-8 text-center text-sm text-slate-400">No certificates issued yet.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2">Certificate ID</th><th>Participant</th><th>Issued</th><th>Status</th><th /></tr></thead><tbody className="divide-y">{certificateRows.map((c) => <tr key={c.id}><td className="py-3 font-semibold">{c.certificate_id}</td><td>{participants.find((p) => p.id === c.participant_id)?.full_name || "—"}</td><td>{c.issue_date}</td><td><span className={c.status === "valid" ? "text-emerald-700" : "text-rose-700"}>{c.status}</span></td><td><div className="flex items-center gap-3">{c.status === "valid" ? <a href={`/api/certificates/${c.id}/pdf`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-700"><Download size={13} /> PDF</a> : <span className="text-slate-400">PDF disabled</span>}{c.status === "valid" && <button onClick={() => { setRevokeTarget(c); setRevokeReason(""); }} className="text-rose-600">Revoke</button>}</div></td></tr>)}</tbody></table></div>}
         {visible.length > pageSize && <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>Page {certificatePage + 1} of {certificatePageCount} · {visible.length} certificates</span><div className="flex gap-2"><button disabled={certificatePage === 0} onClick={() => setCertificatePage((p) => p - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Previous</button><button disabled={certificatePage + 1 >= certificatePageCount} onClick={() => setCertificatePage((p) => p + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Next</button></div></div>}
       </section>
+      {revokeTarget && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4"><div role="dialog" aria-modal="true" aria-labelledby="revoke-title" className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"><h2 id="revoke-title" className="text-base font-bold">Revoke certificate</h2><p className="mt-2 text-xs text-slate-500">This marks {revokeTarget.certificate_id} as revoked. The original certificate ID and record will be preserved.</p><label className="mt-4 block text-xs font-semibold">Reason<textarea value={revokeReason} onChange={(e) => setRevokeReason(e.target.value)} maxLength={500} rows={3} placeholder="Enter the reason for revocation" className="mt-1.5 w-full rounded-lg border p-3 text-sm"/></label><div className="mt-4 flex justify-end gap-2"><button disabled={revokeBusy} onClick={() => setRevokeTarget(null)} className="rounded-lg border px-3 py-2 text-xs">Cancel</button><button disabled={revokeBusy || revokeReason.trim().length < 3} onClick={confirmRevoke} className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{revokeBusy ? "Revoking…" : "Confirm revocation"}</button></div></div></div>}
       {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-xs text-rose-700"><AlertCircle size={14} className="mr-1 inline" />{error}</p>}
       {notice && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700"><CheckCircle2 size={14} className="mr-1 inline" />{notice}</p>}
     </div>

@@ -190,3 +190,17 @@ export async function saveOrganizationSettings(input: {
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }
+
+
+export async function revokeCertificate(input: { certificateId: string; reason: string }) {
+  const { db } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.certificateId)) throw new Error("Invalid certificate record.");
+  const reason = input.reason.trim();
+  if (reason.length < 3 || reason.length > 500) throw new Error("Enter a revocation reason between 3 and 500 characters.");
+  const { error } = await db.rpc("revoke_certificate", {
+    target_certificate_id: input.certificateId,
+    reason,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/certificates");
+}
