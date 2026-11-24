@@ -1,0 +1,7 @@
+"use server";
+import {createClient} from "@/lib/supabase/server";import {revalidatePath} from "next/cache";import {folderSchema,eventSchema,participantSchema,templateSchema} from "@/lib/validation";
+async function currentUser(){const db=await createClient();const {data:{user},error}=await db.auth.getUser();if(error||!user)throw new Error("Authentication required");return {db,user};}
+export async function createFolder(input:unknown){const data=folderSchema.parse(input);const {db,user}=await currentUser();const {error}=await db.from("event_folders").insert({...data,admin_id:user.id});if(error)throw new Error(error.message);revalidatePath("/folders");}
+export async function createEvent(input:unknown){const data=eventSchema.parse(input);const {db,user}=await currentUser();const {error}=await db.from("events").insert({...data,admin_id:user.id});if(error)throw new Error(error.message);revalidatePath("/events");}
+export async function createParticipant(input:unknown){const data=participantSchema.parse(input);const {db,user}=await currentUser();const {error}=await db.from("participants").insert({...data,admin_id:user.id});if(error)throw new Error(error.message);revalidatePath("/participants");}
+export async function saveTemplate(input:unknown){const data=templateSchema.parse(input);const {db,user}=await currentUser();const {error}=await db.from("templates").insert({...data,admin_id:user.id});if(error)throw new Error(error.message);revalidatePath("/templates");}

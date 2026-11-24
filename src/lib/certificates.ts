@@ -1,0 +1,4 @@
+import {createClient} from "@/lib/supabase/server";
+export type IssueCertificateInput={eventId:string;participantId:string;templateId?:string|null;achievementTitle?:string;idempotencyKey:string};
+export async function issueCertificate(input:IssueCertificateInput){const db=await createClient();const {data,error}=await db.rpc("issue_certificate",{target_event_id:input.eventId,target_participant_id:input.participantId,target_template_id:input.templateId??null,target_achievement_title:input.achievementTitle??null,request_key:input.idempotencyKey});if(error)throw new Error(error.message);return Array.isArray(data)?data[0]:data;}
+export async function revokeCertificate(id:string,reason:string){const db=await createClient();const {error}=await db.rpc("revoke_certificate",{target_certificate_id:id,reason});if(error)throw new Error(error.message);}
