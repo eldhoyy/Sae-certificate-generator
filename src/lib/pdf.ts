@@ -9,6 +9,7 @@ type LayoutField = {
   size?: number;
   color?: string;
   bold?: boolean;
+  fontFamily?: "Helvetica" | "TimesRoman" | "Courier";
 };
 
 type CertificateTemplate = {
@@ -40,6 +41,11 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
   const page = pdf.addPage([842, 595]);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const fontSets = {
+    Helvetica: { regular, bold },
+    TimesRoman: { regular: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold) },
+    Courier: { regular: await pdf.embedFont(StandardFonts.Courier), bold: await pdf.embedFont(StandardFonts.CourierBold) },
+  };
 
   if (d.template && d.backgroundBytes) {
     if (d.template.background_mime === "application/pdf") {
@@ -77,7 +83,8 @@ export async function createSimpleCertificatePdf(d: CertificateData) {
         }
         const value = values[token] ?? (token.startsWith("{{") ? field.label || "" : token);
         if (!value) continue;
-        const font: PDFFont = field.bold ? bold : regular;
+        const selectedFonts = fontSets[field.fontFamily || "Helvetica"] || fontSets.Helvetica;
+        const font: PDFFont = field.bold ? selectedFonts.bold : selectedFonts.regular;
         page.drawText(value.slice(0, 180), {
           x,
           y: Math.max(8, 595 - top - size),

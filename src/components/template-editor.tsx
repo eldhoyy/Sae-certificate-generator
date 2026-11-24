@@ -15,12 +15,13 @@ type Item = {
   size: number;
   color: string;
   bold: boolean;
+  fontFamily: "Helvetica" | "TimesRoman" | "Courier";
 };
 
 const initial: Item[] = [
-  { id: 1, label: "Participant name", token: "{{participant_name}}", x: 28, y: 42, size: 28, color: "#17264b", bold: true },
-  { id: 2, label: "Event name", token: "{{event_name}}", x: 28, y: 61, size: 15, color: "#475569", bold: false },
-  { id: 3, label: "Certificate ID", token: "{{certificate_id}}", x: 28, y: 80, size: 11, color: "#64748b", bold: false },
+  { id: 1, label: "Participant name", token: "{{participant_name}}", x: 28, y: 42, size: 28, color: "#17264b", bold: true, fontFamily: "Helvetica" },
+  { id: 2, label: "Event name", token: "{{event_name}}", x: 28, y: 61, size: 15, color: "#475569", bold: false, fontFamily: "Helvetica" },
+  { id: 3, label: "Certificate ID", token: "{{certificate_id}}", x: 28, y: 80, size: 11, color: "#64748b", bold: false, fontFamily: "Helvetica" },
 ];
 
 export function TemplateEditor() {
@@ -45,7 +46,7 @@ export function TemplateEditor() {
     const id = Math.max(0, ...items.map((item) => item.id)) + 1;
     setItems((value) => [...value, {
       id, label: "Custom text", token: "{{custom_text}}",
-      x: 40, y: 52, size: 18, color: "#17264b", bold: false,
+      x: 40, y: 52, size: 18, color: "#17264b", bold: false, fontFamily: "Helvetica",
     }]);
     setSelected(id);
   }
@@ -198,6 +199,7 @@ export function TemplateEditor() {
             <label className="mb-3 flex items-center justify-between text-[11px]">Text colour
               <input type="color" value={current.color} onChange={(event) => patch(current.id, { color: event.target.value })} />
             </label>
+            <label className="mb-3 block text-[11px]">Font family<select value={current.fontFamily} onChange={(event) => patch(current.id, { fontFamily: event.target.value as Item["fontFamily"] })} className="mt-1 w-full rounded-lg border p-2 text-xs"><option value="Helvetica">Helvetica</option><option value="TimesRoman">Times New Roman</option><option value="Courier">Courier</option></select></label>
             <label className="flex gap-2 text-xs"><input type="checkbox" checked={current.bold} onChange={(event) => patch(current.id, { bold: event.target.checked })} /> Bold</label>
           </div>
         )}
