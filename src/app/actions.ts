@@ -226,7 +226,10 @@ export async function inviteAdministrator(input: { email: string; displayName: s
 
   const email = input.email.trim().toLowerCase();
   const displayName = input.displayName.trim();
-  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  const atIndex = email.indexOf("@");
+  const domain = atIndex >= 0 ? email.slice(atIndex + 1) : "";
+  if (email.length > 254 || atIndex < 1 || atIndex !== email.lastIndexOf("@") ||
+      !domain.includes(".") || domain.startsWith(".") || domain.endsWith(".")) {
     throw new Error("Enter a valid administrator email address.");
   }
   if (displayName.length < 1 || displayName.length > 120) {
@@ -242,12 +245,14 @@ export async function inviteAdministrator(input: { email: string; displayName: s
   const adminClient = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const redirectTo = `${(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\\/$/, "")}/login`;
+  const appOrigin = (process.env.NEXT_PUBLIC_APP_URL || "").trim();
+  const normalizedOrigin = appOrigin.endsWith("/") ? appOrigin.slice(0, -1) : appOrigin;
+  const redirectTo = normalizedOrigin.startsWith("https://") || normalizedOrigin.startsWith("http://")
+    ? `${normalizedOrigin}/login`
+    : undefined;
   const { error } = await adminClient.auth.admin.inviteUserByEmail(email, {
     data: { full_name: displayName },
-    redirectTo: redirectTo.startsWith("https://") || redirectTo.startsWith("http://")
-      ? redirectTo
-      : undefined,
+    redirectTo,
   });
   if (error) throw new Error(error.message);
   revalidatePath("/admins");
