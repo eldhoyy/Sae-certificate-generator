@@ -64,7 +64,9 @@ export function ParticipantManager({ events, participants }: { events: EventOpti
     if (!file) return;
     setBusy(true); setError(""); setImportMessage("");
     try {
+      if (file.size > 10 * 1024 * 1024) throw new Error("Import file must be 10 MB or smaller.");
       const parsed = await readParticipantFile(file);
+      if (parsed.rows.length > 5000) throw new Error("Import is limited to 5,000 rows per file.");
       if (!parsed.headers.length || !parsed.rows.length) throw new Error("The file has no participant rows.");
       setFileName(file.name); setHeaders(parsed.headers); setRows(parsed.rows);
       const nameHeader = parsed.headers.find((h) => /name|participant|student/i.test(h)) || parsed.headers[0];
