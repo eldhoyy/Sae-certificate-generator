@@ -25,6 +25,8 @@ const initial: Item[] = [
   { id: 4, label: "Verification QR", token: "{{qr_code}}", x: 87, y: 76, size: 11, color: "#17264b", bold: false, fontFamily: "Helvetica" },
   { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica" },
   { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica" },
+  { id: 5, label: "Issue date", token: "{{issue_date}}", x: 72, y: 88, size: 10, color: "#64748b", bold: false, fontFamily: "Helvetica" },
+  { id: 6, label: "Achievement title", token: "{{achievement_title}}", x: 28, y: 70, size: 16, color: "#17264b", bold: true, fontFamily: "Helvetica" },
 ];
 
 export function TemplateEditor() {

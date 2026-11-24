@@ -13,6 +13,7 @@
 - Folder, event, participant, template, certificate, organisation-setting and administrator role changes are recorded through audit triggers; certificate revocations include their reason.
 - Template source assets cannot be deleted while a saved template or issued certificate snapshot references them.
 - Template layout payloads are schema-validated and bounded to 40 fields; background object paths must be under the authenticated administrator's Storage prefix.
+- Template layout payloads are schema-validated and bounded to 40 fields; background object paths must be under the authenticated administrator's Storage prefix.
 
 ## Dependency security
 - SheetJS is pinned to the official 0.20.3 distribution because the older npm-registry 0.18.5 release has known spreadsheet-parser vulnerabilities. Re-run `npm audit` and review the full report whenever dependencies change.

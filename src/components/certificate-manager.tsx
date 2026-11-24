@@ -39,6 +39,7 @@ export function CertificateManager({ participants, certificates, events, templat
 
   async function issue(participant: Participant) {
     const downloadWindow = window.open("about:blank", "_blank");
+    if (downloadWindow) downloadWindow.opener = null;
     setBusy(participant.id); setError(""); setNotice("");
     try {
       const result = await issueOneCertificate({
