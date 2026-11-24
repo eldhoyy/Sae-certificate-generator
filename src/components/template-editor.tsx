@@ -66,7 +66,7 @@ export function TemplateEditor() {
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Background image must be 10 MB or smaller.");
+      setError("Background file must be 10 MB or smaller.");
       return;
     }
     setError("");
@@ -79,7 +79,7 @@ export function TemplateEditor() {
     setError("");
     setMessage("");
     try {
-      if (!background) throw new Error("Upload a PNG or JPG certificate background first.");
+      if (!background) throw new Error("Upload a PNG, JPG or PDF certificate background first.");
       if (!templateName.trim()) throw new Error("Enter a template name.");
       const client = createClient();
       const { data: auth, error: authError } = await client.auth.getUser();
