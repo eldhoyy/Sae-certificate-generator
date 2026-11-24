@@ -3,17 +3,20 @@
 ## Implemented in the repository
 - [x] Authenticated workspace shell and dashboard
 - [x] Event folders and events
-- [x] Individual participant records
+- [x] Individual participant records with search and pagination
 - [x] CSV/Excel import with column mapping, preview and email duplicate checks
 - [x] PNG/JPG template designer and saved layouts
-- [x] Individual certificate issuance and authenticated PDF downloads
+- [x] Individual certificate issuance, authenticated PDF downloads and reasoned revocation
 - [x] One permanent certificate per participant per event
-- [x] Template-backed PDF output for saved image templates
+- [x] Template-backed PDF output for saved PNG/JPG/PDF templates
 - [x] QR field rendering and public verification lookup
 - [x] Bulk issuance and ZIP PDF export
 - [x] Super Admin role management
 - [x] Profile and organisation settings
 - [x] Tenant-aware SQL schema, RLS and private storage policies
+- [x] Selectable standard font families and bold styling
+- [x] Replace vulnerable npm SheetJS release with official patched distribution
+- [x] Migrate Next.js 16 middleware convention to proxy
 
 
 ## Remaining before production

@@ -4,11 +4,11 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 
 ## Implemented application workflows
 - Authenticated workspace with dashboard, event folders and event management.
-- Individual participant creation and CSV/XLS/XLSX import with column mapping, preview and email duplicate checks.
-- Visual template designer for PNG/JPG/PDF backgrounds, draggable text fields, dynamic tokens, font size, colour and weight.
-- Individual certificate issuance and PDF download.
+- Individual participant creation, searchable/paginated records and CSV/XLS/XLSX import with column mapping, preview, validation and email duplicate checks.
+- Visual template designer for PNG/JPG/PDF backgrounds, draggable dynamic fields, QR verification, font family, size, colour and weight.
+- Individual certificate issuance, authenticated PDF download and reasoned revocation.
 - Bulk issuance for up to 250 participants per server batch, with PDF ZIP export from the browser.
-- Saved PNG/JPG template rendering in landscape A4 PDF output, including dynamic text and QR fields.
+- Saved PNG/JPG/PDF template rendering in landscape A4 PDF output, including dynamic text and QR fields.
 - Public certificate verification by certificate ID, with a deliberately limited result.
 - Database-enforced tenant ownership, protected Super Admin role changes, profile and organisation settings.
 - Private Supabase Storage buckets and audit log triggers for core workspace records.
@@ -16,7 +16,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 ## Stack
 - Next.js App Router, React and TypeScript; Tailwind CSS
 - Supabase Auth, PostgreSQL, Row Level Security and Storage
-- pdf-lib, qrcode, PapaParse, SheetJS and JSZip
+- pdf-lib, qrcode, PapaParse, official patched SheetJS distribution and JSZip
 
 ## Local setup
 1. Use Node.js 22 or newer.
