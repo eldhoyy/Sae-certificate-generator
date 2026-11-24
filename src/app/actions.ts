@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { folderSchema, eventSchema, participantSchema, templateSchema } from "@/lib/validation";
 import { isValidCertificateBackground } from "@/lib/file-validation";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
+import { z } from "zod";
 
 async function currentUser() {
   const db = await createClient();
@@ -226,10 +227,7 @@ export async function inviteAdministrator(input: { email: string; displayName: s
 
   const email = input.email.trim().toLowerCase();
   const displayName = input.displayName.trim();
-  const atIndex = email.indexOf("@");
-  const domain = atIndex >= 0 ? email.slice(atIndex + 1) : "";
-  if (email.length > 254 || atIndex < 1 || atIndex !== email.lastIndexOf("@") ||
-      !domain.includes(".") || domain.startsWith(".") || domain.endsWith(".")) {
+  if (!z.string().email().max(254).safeParse(email).success) {
     throw new Error("Enter a valid administrator email address.");
   }
   if (displayName.length < 1 || displayName.length > 120) {
