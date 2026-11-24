@@ -217,9 +217,9 @@ export async function revokeCertificate(input: { certificateId: string; reason: 
 }
 
 export async function inviteAdministrator(input: { email: string; displayName: string }) {
-  const { db } = await currentUser();
+  const { db, user } = await currentUser();
   const { data: profile, error: profileError } = await db
-    .from("profiles").select("role").maybeSingle();
+    .from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profileError || profile?.role !== "super_admin") {
     throw new Error("Only a Super Admin can invite administrators.");
   }
