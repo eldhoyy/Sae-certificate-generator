@@ -151,3 +151,23 @@ export async function bulkIssueCertificates(input: {
   revalidatePath("/certificates");
   return { issued, failures };
 }
+
+export async function setAdministratorRole(input: { userId: string; role: "admin" | "super_admin" }) {
+  const { db } = await currentUser();
+  if (!/^[0-9a-f-]{36}$/i.test(input.userId)) throw new Error("Invalid administrator account.");
+  const { error } = await db.rpc("super_admin_set_role", {
+    target_user_id: input.userId,
+    new_role: input.role,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admins");
+}
+
+export async function updateMyDisplayName(input: { displayName: string }) {
+  const { db } = await currentUser();
+  const displayName = input.displayName.trim();
+  if (displayName.length < 1 || displayName.length > 120) throw new Error("Display name must be 1–120 characters.");
+  const { error } = await db.rpc("update_my_profile", { new_display_name: displayName });
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
