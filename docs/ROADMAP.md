@@ -30,7 +30,7 @@
 - [ ] Add rate limiting and abuse monitoring to public verification.
 - [ ] Add automated integration and end-to-end tests, including two-tenant RLS and Storage isolation.
 - [ ] Apply organization settings to certificate branding and output preferences.
-- [ ] Add account invitation delivery and secure admin provisioning workflow.
+- [x] Add Super Admin-only account invitation delivery and secure admin provisioning workflow.
 - [ ] Review dependency audit findings and update vulnerable packages.
 - [ ] Configure backups, monitoring, error reporting and retention.
 - [x] Increase certificate ID random suffix to 128 bits.
@@ -42,3 +42,4 @@
 - [x] Open the individual PDF tab synchronously to avoid popup blocking after issuance.
 - [x] Enforce case-insensitive participant email uniqueness per event in PostgreSQL.
 - [x] Bound participant custom fields and certificate template field schemas.
+- [x] Prevent removal of the final Super Admin and validate direct issuance RPC title input.

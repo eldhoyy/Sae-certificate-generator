@@ -3,7 +3,8 @@
 ## Implemented controls
 - Tenant-owned records include an `admin_id`; relational foreign keys bind child records to the same owner.
 - PostgreSQL Row Level Security is enabled for tenant tables and the organization-settings table.
-- Normal profile updates use a narrowly scoped RPC; Super Admin role changes use a protected database function.
+- Normal profile updates use a narrowly scoped RPC; Super Admin role changes use a protected database function that preserves at least one Super Admin.
+- Administrator invitations are sent only by a server action that verifies the caller's Super Admin role and uses a server-only Supabase service role key.
 - Certificate issuance validates the authenticated owner of the event, participant and optional template; immutable issuance snapshots include the event name and template layout.
 - Issuance is idempotent and a database unique index enforces one certificate per participant per event.
 - Certificate IDs are globally unique; revocation preserves the original certificate record and identifier.

@@ -21,7 +21,7 @@ A multi-administrator certificate management platform built with Next.js, TypeSc
 ## Local setup
 1. Use Node.js 22 or newer.
 2. Copy `.env.example` to `.env.local`.
-3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; set `SUPABASE_SERVICE_ROLE_KEY` as a server-only secret for administrator invitations.
 4. Create a Supabase project and apply every SQL migration in `supabase/migrations` in filename order.
 5. Disable public sign-ups in Supabase Authentication settings.
 6. Create the first trusted administrator through Supabase Auth. Promote the platform owner using the SQL statement in [docs/SETUP.md](docs/SETUP.md).
