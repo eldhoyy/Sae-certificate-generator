@@ -44,7 +44,7 @@ export default async function Page({
   return (
     <main className="min-h-screen bg-[#f7f8fb] px-5 py-12">
       <div className="mx-auto max-w-xl">
-        <Link href="/login" className="text-sm font-bold">Certify</Link>
+        <Link href="/" className="text-sm font-bold">Certificate Desk</Link>
         <div className="mt-10 rounded-3xl border bg-white p-8 text-center shadow-sm">
           <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-700">
             <ShieldCheck size={27} />
@@ -92,6 +92,11 @@ export default async function Page({
                       </div>
                     ))}
                   </dl>
+                  {result.status === "valid" && (
+                    <a href={'/api/public/certificates/' + encodeURIComponent(result.certificate_id) + '/pdf'} className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#202326] px-5 py-3 text-xs font-semibold text-white hover:bg-black">
+                      Download certificate PDF
+                    </a>
+                  )}
                 </>
               ) : (
                 <p className="flex items-center gap-2 text-sm font-semibold text-rose-700">
