@@ -20,7 +20,7 @@ export default async function Page({
   let result: PublicVerification | null = null;
   let error = "";
 
-  if (id?.trim()) {
+  if (id?.trim() && id.trim().length <= 100) {
     try {
       const db = await createClient();
       const { data, error: queryError } = await db.rpc(
@@ -37,6 +37,8 @@ export default async function Page({
     } catch {
       error = "Verification service is not configured.";
     }
+  } else if (id?.trim()) {
+    error = "Certificate IDs must be 100 characters or fewer.";
   }
 
   return (
@@ -56,6 +58,7 @@ export default async function Page({
               name="id"
               defaultValue={id ?? ""}
               required
+              maxLength={100}
               placeholder="Enter certificate ID"
               className="min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm"
             />
