@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Heading } from "@/components/ui";
 import { EventManager } from "@/components/event-manager";
+import { ParticipantManager } from "@/components/participant-manager";
 import { ArrowLeft, Award, FileText, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function FolderWorkspacePage({ params }: { params: Promise<
 
   const eventIds = (events || []).map((event) => event.id);
   const [participantResult, certificateResult, templateResult] = eventIds.length ? await Promise.all([
-    db.from("participants").select("id,full_name,event_id,created_at").in("event_id", eventIds).order("created_at", { ascending: false }).limit(500),
+    db.from("participants").select("id,full_name,email,event_id,created_at").in("event_id", eventIds).order("created_at", { ascending: false }).limit(500),
     db.from("certificates").select("id,certificate_id,participant_id,event_id,status,issue_date").in("event_id", eventIds).order("issued_at", { ascending: false }).limit(500),
     db.from("templates").select("id,name,created_at").order("created_at", { ascending: false }).limit(100),
   ]) : [
@@ -52,10 +53,10 @@ export default async function FolderWorkspacePage({ params }: { params: Promise<
 
       <div className="space-y-5">
         <EventManager events={events || []} folders={[{ id: folder.id, name: folder.name }]} defaultFolderId={folder.id} />
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Participants in this folder</h2><p className="mt-1 text-xs text-slate-500">Latest 500 participant records across this folder’s events</p></div><Link href="/participants" className="text-xs font-semibold text-blue-700">Manage participants →</Link></div>
-          {!participantResult.data?.length ? <p className="py-8 text-center text-sm text-slate-400">No participants yet. Add an event, then add participants to it.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2">Participant</th><th>Event</th><th>Added</th></tr></thead><tbody className="divide-y">{participantResult.data.map((person) => <tr key={person.id}><td className="py-3 font-semibold">{person.full_name}</td><td>{eventNames.get(person.event_id) || "—"}</td><td>{new Date(person.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>}
-        </section>
+        <ParticipantManager
+          events={(events || []).map((event) => ({ id: event.id, name: event.name }))}
+          participants={(participantResult.data || []).map((person) => ({ ...person, email: person.email || null }))}
+        />
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Issued certificates</h2><p className="mt-1 text-xs text-slate-500">Certificate records belonging to this folder</p></div><Link href="/certificates" className="text-xs font-semibold text-blue-700">Open certificate manager →</Link></div>
