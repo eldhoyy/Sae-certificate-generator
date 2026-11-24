@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createFolder } from "@/app/actions";
@@ -70,7 +69,13 @@ export function FolderManager({ folders }: { folders: { id: string; name: string
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {folders.map((folder) => (
-            <Link key={folder.id} href={`/folders/${folder.id}`} className="group rounded-2xl border border-slate-200 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+            <button
+              key={folder.id}
+              type="button"
+              onClick={() => router.push(`/folders/${encodeURIComponent(folder.id)}`)}
+              aria-label={`Open ${folder.name} folder`}
+              className="group w-full touch-manipulation cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
               <div className="mb-4 flex items-start justify-between">
                 <span className="grid size-11 place-items-center rounded-xl bg-blue-50 text-blue-700"><FolderKanban size={20} /></span>
                 <ArrowUpRight size={16} className="text-slate-300 transition group-hover:text-blue-700" />
@@ -78,7 +83,7 @@ export function FolderManager({ folders }: { folders: { id: string; name: string
               <p className="font-semibold text-slate-900">{folder.name}</p>
               <p className="mt-1 line-clamp-2 min-h-8 text-xs leading-5 text-slate-500">{folder.description || "Open this workspace to manage its events and certificates."}</p>
               <p className="mt-4 text-[10px] text-slate-400">Created {new Date(folder.created_at).toLocaleDateString()}</p>
-            </Link>
+            </button>
           ))}
         </div>
       )}
