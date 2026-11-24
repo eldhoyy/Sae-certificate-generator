@@ -46,3 +46,6 @@
 - [x] Add sample-value preview mode in the certificate designer.
 - [x] Bound public certificate verification lookup input at the page and database function.
 - [x] Personalize the workspace header and hide administrator controls from non-Super Admin navigation.
+- [x] Map selected CSV/Excel columns into participant custom fields and snapshot them at issuance.
+- [x] Render custom participant tokens case-insensitively in saved certificate layouts.
+- [x] Add field width, text alignment and italic typography controls to the designer and PDF renderer.
